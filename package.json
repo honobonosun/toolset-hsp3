@@ -1,0 +1,137 @@
+{
+  "name": "toolset-hsp3",
+  "displayName": "toolset-hsp3",
+  "description": "toolset extension for hsp3",
+  "publisher": "honobonosun",
+  "version": "0.2.0",
+  "preview": true,
+  "license": "MIT",
+  "repository": "https://github.com/honobonosun/toolset-hsp3",
+  "engines": {
+    "vscode": "^1.64.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "HSP",
+    "hsp3"
+  ],
+  "activationEvents": [
+    "onCommand:toolset-hsp3.select",
+    "onCommand:toolset-hsp3.openTool",
+    "onLanguage:hsp3"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Toolset HSP3",
+      "type": "object",
+      "properties": {
+        "toolset-hsp3.paths.search": {
+          "title": "search directory paths",
+          "markdownDescription": "Specify the search destination for the HSP3 environment(hsp3cl.exe file) as an array, using the glob wildcard. For specifications, see [node-glob](https://www.npmjs.com/package/glob).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "/hsp3*/hsp3cl.exe"
+          ],
+          "scope": "machine"
+        },
+        "toolset-hsp3.paths.tool": {
+          "title": "tool paths",
+          "markdownDescription": "Specify the filename of the HSP3 tool using an array of string type.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "hsp3dh.exe",
+            "gpbconv.exe",
+            "hdl.exe"
+          ],
+          "scope": "machine"
+        },
+        "toolset-hsp3.path": {
+          "title": "path index",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "scope": "resource",
+          "markdownDescription": "The hsp3root path to use for each project and machine"
+        },
+        "toolset-hsp3.path.globalSave": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "The HSP3 environment selection will be saved in the PC itself."
+        },
+        "toolset-hsp3.tool.launch.cwd": {
+          "type": "string",
+          "scope": "resource",
+          "default": "",
+          "description": "Specifies the current directory when the tool is run."
+        },
+        "toolset-hsp3.useWine": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Task runner via [Wine](https://www.winehq.org/) command.",
+          "scope": "machine-overridable"
+        },
+        "toolset-hsp3.useWSL": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Windows only, without exe extension, run with WSL.",
+          "scope": "machine-overridable"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "toolset-hsp3.select",
+        "title": "Select hsp3root path"
+      },
+      {
+        "command": "toolset-hsp3.launch",
+        "title": "Start the hsp3 utility"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "toolset-hsp3",
+        "when": "shellExecutionSupported"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.4",
+    "@types/is-glob": "^4.0.2",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.64.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
+    "@vscode/test-electron": "^1.6.2",
+    "eslint": "^7.32.0",
+    "mocha": "^9.1.1",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.4.3",
+    "vsce": "^2.6.7"
+  },
+  "dependencies": {
+    "glob": "^7.2.0",
+    "is-glob": "^4.0.3"
+  }
+}
