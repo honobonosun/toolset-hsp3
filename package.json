@@ -54,7 +54,7 @@
           ],
           "scope": "machine"
         },
-        "toolset-hsp3.path": {
+        "toolset-hsp3.path.index": {
           "title": "path index",
           "type": [
             "string",
