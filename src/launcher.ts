@@ -7,6 +7,18 @@ import mu from "./myUtil";
 import { Extension } from "./extension";
 import Provider from "./provider";
 
+function editorPaths() {
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    const FILEPATH = editor.document.fileName;
+    const PROJECT_DIR = vscode.workspace.getWorkspaceFolder(
+      editor.document.uri
+    );
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    return { FILEPATH, PROJECT_DIR };
+  }
+}
+
 export default class Lancher implements vscode.Disposable {
   private subscriptions: vscode.Disposable[] = [];
   private provider: Provider;
@@ -42,7 +54,7 @@ export default class Lancher implements vscode.Disposable {
       ? this.extension.current.path
       : path.dirname(this.extension.current.path);
 
-    const tools = <string[] | undefined>this.extension.cfg.get("paths.tool");
+    const tools = this.extension.cfg.get("paths.tool") as string[] | undefined;
     let list = [
       {
         label: "exporer",
@@ -60,10 +72,18 @@ export default class Lancher implements vscode.Disposable {
 
     if (args.label === "exporer") mu.openExplorer(dirname);
     else {
-      const cwd = <string | undefined>this.extension.cfg.get("tool.launch.cwd");
-      const command = this.extension.cfg.get("useWine")
+      const cwd = this.extension.cfg.get("tool.launch.cwd") as
+        | string
+        | undefined;
+      const cmd = this.extension.cfg.get("useWine")
         ? `wine ${args.detail}`
         : args.detail;
+      const env = editorPaths();
+      const command = mu.normalize(
+        cmd,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        Object.assign(env, { HSP3ROOT: dirname }, process.env)
+      );
       const label = args.label;
       const definition = { type: Provider.typeName, command, label };
       const task = new vscode.Task(
