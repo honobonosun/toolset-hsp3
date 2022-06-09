@@ -71,7 +71,7 @@ export class Extension implements vscode.Disposable {
 
     this.update((list) => {
       if (list.length === 0) return;
-      const path = this.cfg.get("path");
+      const path = this.cfg.get("path.index");
       if (path) this.select(list.find((v) => v.path === path));
     });
 
@@ -179,7 +179,7 @@ export class Extension implements vscode.Disposable {
     }
     if (save)
       this.cfg.update(
-        "path",
+        "path.index",
         this.current?.path || null,
         this.cfg.get("path.globalSave") === false ? undefined : true
       );
