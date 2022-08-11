@@ -12,6 +12,8 @@ export default class Provider implements vscode.TaskProvider {
     task: vscode.Task,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Task> {
+    console.log("resolveTask", task.definition.type);
+
     if (task.definition.type === Provider.typeName) {
       if (!task.execution && task.definition.command)
         task.execution = new vscode.ShellExecution(task.definition.command);

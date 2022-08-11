@@ -4,7 +4,29 @@ All notable changes to the "toolset-hsp3" extension will be documented in this f
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [0.3.0] - 2022-08-10
+
+### Added
+
+- ToolsetProvider に resolveTaskEnv メソッドを追加しました。
+- HSP3 以外の言語でも toolset 選択を横断的に実現しました。
+- コマンド実行時に、環境変数の変更を適用する機能を実装しました。
+  - resolveTaskEnv から提供を受けて、変更内容が決定します。
+
+### Changed
+
+- 情報取得用コマンド名を変更しました。
+
+### Removed
+
+- 設定に使用できる特殊文字を廃止しました。
+  - 以後は[Variables Reference](https://code.visualstudio.com/docs/editor/variables-reference)を使用してください。
+
+## [0.2.1] - 2022-06-09
+
+### Added
+
+- コマンド起動の文字に特殊文字の置き換えを実装しました。
 
 ## [0.1.2] - 2022-04-12
 

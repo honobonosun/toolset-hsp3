@@ -3,7 +3,7 @@
   "displayName": "toolset-hsp3",
   "description": "toolset extension for hsp3",
   "publisher": "honobonosun",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "preview": true,
   "license": "MIT",
   "repository": "https://github.com/honobonosun/toolset-hsp3",
@@ -15,12 +15,16 @@
   ],
   "keywords": [
     "HSP",
-    "hsp3"
+    "hsp3",
+    "multi-root ready"
   ],
   "activationEvents": [
     "onCommand:toolset-hsp3.select",
-    "onCommand:toolset-hsp3.openTool",
-    "onLanguage:hsp3"
+    "onCommand:toolset-hsp3.launch",
+    "onCommand:toolset-hsp3.get.keyword",
+    "onCommand:toolset-hsp3.get.hsp3dirname",
+    "onCommand:toolset-hsp3.get.hsp3root",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -28,8 +32,7 @@
       "title": "Toolset HSP3",
       "type": "object",
       "properties": {
-        "toolset-hsp3.paths.search": {
-          "title": "search directory paths",
+        "toolset-hsp3.hsp3cl.globs": {
           "markdownDescription": "Specify the search destination for the HSP3 environment(hsp3cl.exe file) as an array, using the glob wildcard. For specifications, see [node-glob](https://www.npmjs.com/package/glob).",
           "type": "array",
           "items": {
@@ -40,70 +43,107 @@
           ],
           "scope": "machine"
         },
-        "toolset-hsp3.paths.tool": {
-          "title": "tool paths",
-          "markdownDescription": "Specify the filename of the HSP3 tool using an array of string type.",
+        "toolset-hsp3.launch.commands": {
+          "markdownDescription": "Sets the commands to be executed via toolset-hsp3 as a string type array.\n\nIf `toolset-hsp3.launch.absolute` is true, it is converted to a string with hsp3root inserted at the beginning.",
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": [
+            "hdl.exe ${command:toolset-hsp3.keyword}",
             "hsp3dh.exe",
-            "gpbconv.exe",
-            "hdl.exe"
+            "gpbconv.exe"
           ],
-          "scope": "machine"
+          "scope": "window"
         },
-        "toolset-hsp3.path.index": {
-          "title": "path index",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "scope": "resource",
-          "markdownDescription": "The hsp3root path to use for each project and machine"
-        },
-        "toolset-hsp3.path.globalSave": {
-          "type": "boolean",
-          "default": true,
-          "scope": "resource",
-          "description": "The HSP3 environment selection will be saved in the PC itself."
-        },
-        "toolset-hsp3.tool.launch.cwd": {
+        "toolset-hsp3.current": {
           "type": "string",
-          "scope": "resource",
-          "default": "",
-          "description": "Specifies the current directory when the tool is run."
+          "scope": "window",
+          "markdownDescription": "current hsp3root path."
         },
-        "toolset-hsp3.useWine": {
+        "toolset-hsp3.launch.cwd": {
+          "type": "string",
+          "scope": "window",
+          "default": "",
+          "examples": [
+            "",
+            "${fileDirname}",
+            "${command:toolset-hsp3.get.dirname}"
+          ],
+          "markdownDescription": "Sets the current directory for command execution.\n\nAn empty string is set to the VSCode default current directory."
+        },
+        "toolset-hsp3.launch.absolute": {
+          "type": "boolean",
+          "scope": "window",
+          "description": "Command run with an absolute path.\n\nThis sets use to insert `${command:toolset-hsp3.get.dirname}` at the beginning.\n\nSome the shell commands, may not work.",
+          "default": false
+        },
+        "toolset-hsp3.launch.useWine": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Task runner via [Wine](https://www.winehq.org/) command.",
-          "scope": "machine-overridable"
+          "scope": "window"
         },
-        "toolset-hsp3.useWSL": {
+        "toolset-hsp3.launch.useWSL": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Windows only, without exe extension, run with WSL.",
-          "scope": "machine-overridable"
+          "scope": "window"
         }
       }
     },
     "commands": [
       {
         "command": "toolset-hsp3.select",
-        "title": "Select hsp3root path"
+        "title": "Select hsp3root path",
+        "category": "hsp"
       },
       {
         "command": "toolset-hsp3.launch",
-        "title": "Start the hsp3 utility"
+        "title": "Execute toolset-hsp3 command",
+        "category": "hsp"
+      },
+      {
+        "command": "toolset-hsp3.get.keyword",
+        "title": "insider:Get keyword that is on editor",
+        "enablement": "false"
+      },
+      {
+        "command": "toolset-hsp3.get.dirname",
+        "title": "insider:Get current hsp3root dirname path",
+        "enablement": "false"
+      },
+      {
+        "command": "toolset-hsp3.get.path",
+        "title": "insider:Get current hsp3root path",
+        "enablement": "false"
       }
     ],
     "taskDefinitions": [
       {
         "type": "toolset-hsp3",
-        "when": "shellExecutionSupported"
+        "when": "shellExecutionSupported",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "args": {
+            "type": "string"
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "env": {
+            "type": "object"
+          },
+          "absolute": {
+            "type": "boolean",
+            "description": "Join the toolset directory to the command."
+          }
+        }
       }
     ]
   },
@@ -133,5 +173,9 @@
   "dependencies": {
     "glob": "^7.2.0",
     "is-glob": "^4.0.3"
-  }
+  },
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ]
 }

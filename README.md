@@ -22,7 +22,7 @@ In order to be detected in a Wine environment, you need to set the glob pattern 
 
 ## Extension Settings
 
-### toolset-hsp3.paths.search
+### toolset-hsp3.hsp3cl.globs
 
 Write a glob pattern to search for the installed HSP3 to string type array.
 
@@ -32,19 +32,13 @@ Since it is an array, you can write multiple glob patterns.
 
 You can read about other specifications in the [repository](https://github.com/isaacs/node-glob#windows).
 
-### toolset-hsp3.path
+### toolset-hsp3.launch.commands
 
-The path of the hsp3root selected for the current project.
+Set up a list of one-liners to be executed by the Task Runner.
 
-This value varies depending on your PC environment, so do not share it with others.
+Variables Reference can be used.
 
-### toolset-hsp3.path.globalSave
-
-If this setting is true, the HSP3 environment selection will be saved in the PC itself.
-
-If you want to save the path selection to the project, set it to false.
-
-### toolset-hsp3.tool.launch.cwd
+### toolset-hsp3.launch.cwd
 
 To change the current directory of the Task Runner, change this setting.
 

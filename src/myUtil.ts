@@ -123,4 +123,43 @@ export default class MyUtil {
         break;
     }
   }
+
+  public static async openFolderCommand(dirname: string) {
+    let command: string;
+    let cwd: string | undefined = undefined;
+    let name: string;
+    switch (os.platform()) {
+      case "win32": {
+        command = "explorer.exe .";
+        cwd = dirname;
+        name = "explorer";
+      }
+      case "darwin": {
+        command = `open ${dirname}`;
+        name = "Finder";
+      }
+      default: {
+        if (this.isWSL()) {
+          command = "explorer.exe .";
+          cwd = dirname;
+          name = "explorer";
+        } else {
+          command = "xdg-open .";
+          cwd = dirname;
+          name = "file manager";
+        }
+      }
+    }
+    return { command, cwd, name };
+  }
+
+  static object = {
+    entries(obj: { [key: string]: any }): [string, any][] {
+      let ownProps = Object.keys(obj),
+        i = ownProps.length,
+        resArray = new Array(i);
+      while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+      return resArray;
+    },
+  };
 }
