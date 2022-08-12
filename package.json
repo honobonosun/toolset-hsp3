@@ -1,0 +1,59 @@
+{
+  "name": "toolset-hsp3",
+  "displayName": "toolset-hsp3",
+  "description": "説明",
+  "version": "0.4.0",
+  "preview": true,
+  "author": "honobonosun",
+  "publisher": "honobonosun",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/honobonosun/toolset-hsp3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/honobonosun/toolset-hsp3/issues"
+  },
+  "engines": {
+    "vscode": "^1.62.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "HSP",
+    "hsp3",
+    "multi-root ready"
+  ],
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ],
+  "scripts": {
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "vsce:package": "vsce package"
+  },
+  "dependencies": {
+    "glob": "^8.0.3",
+    "is-glob": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/is-glob": "^4.0.2",
+    "@types/node": "^18.7.2",
+    "@types/vscode": "^1.70.0",
+    "@typescript-eslint/eslint-plugin": "^5.33.0",
+    "@typescript-eslint/parser": "^5.33.0",
+    "@vscode/test-electron": "^2.1.5",
+    "eslint": "^8.21.0",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.7.4",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "main": "./dist/extension",
+  "activationEvents": [
+    "onStartupFinished"
+  ]
+}
