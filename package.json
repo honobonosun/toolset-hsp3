@@ -15,7 +15,7 @@
     "url": "https://github.com/honobonosun/toolset-hsp3/issues"
   },
   "engines": {
-    "vscode": "^1.62.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Programming Languages"
@@ -32,7 +32,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "watch": "webpack --mode development --watch",
-    "vsce:package": "vsce package"
+    "vsce:package": "vsce package --out toolset-hsp3.vsix"
   },
   "dependencies": {
     "glob": "^8.0.3",
@@ -45,8 +45,9 @@
     "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
-    "@vscode/test-electron": "^2.1.5",
     "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.7.1",
     "ts-loader": "^9.3.1",
     "typescript": "^4.7.4",
     "webpack": "^5.74.0",
@@ -55,5 +56,24 @@
   "main": "./dist/extension",
   "activationEvents": [
     "onStartupFinished"
-  ]
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "toolset-hsp3",
+      "type": "object",
+      "properties": {
+        "toolset-hsp3.globs": {
+          "markdownDescription": "Specify the search destination for the HSP3 environment(hsp3cl.exe file) as an array, using the glob wildcard. For specifications, see [node-glob](https://www.npmjs.com/package/glob).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "/hsp3*/hsp3cl.exe"
+          ],
+          "scope": "machine"
+        }
+      }
+    }
+  }
 }
