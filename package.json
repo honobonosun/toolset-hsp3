@@ -72,6 +72,10 @@
             "/hsp3*/hsp3cl.exe"
           ],
           "scope": "machine"
+        },
+        "toolset-hsp3.current": {
+          "scope": "window",
+          "type": "object"
         }
       }
     }

@@ -10,16 +10,19 @@ import {
   languages,
   LanguageStatusItem,
   OutputChannel,
+  ProgressLocation,
   window,
   workspace,
   WorkspaceConfiguration,
 } from "vscode";
 
+const glob2 = promisify(glob);
+
 export async function activate(context: ExtensionContext) {
   console.log(["active toolset-hsp3"]);
 
   const extension = new Extension(context);
-  extension.update();
+  extension.update(true);
   return extension.api;
 }
 export function deactivate() {
@@ -32,7 +35,7 @@ export class Extension implements Disposable {
   public config: WorkspaceConfiguration;
   public output: OutputChannel;
   public statusbar: LanguageStatusItem;
-  public current = 0;
+  public current: Item | undefined = undefined;
   public list: Item[] = [];
 
   constructor(private context: ExtensionContext) {
@@ -42,7 +45,10 @@ export class Extension implements Disposable {
       workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration("toolset-hsp3"))
           this.config = workspace.getConfiguration("toolset-hsp3");
-        if (e.affectsConfiguration("toolset-hsp3.globs")) this.update();
+        if (e.affectsConfiguration("toolset-hsp3.globs"))
+          window.withProgress({ location: ProgressLocation.Window }, () =>
+            this.update()
+          );
       })
     );
 
@@ -53,7 +59,25 @@ export class Extension implements Disposable {
       "toolset-hsp3.current",
       { language: "hsp3" }
     );
+    this.statusbar.detail = "HSP バージョン";
+    this.statusbar.command = {
+      title: "バージョンの選択",
+      command: "toolset-hsp3.select",
+    };
     context.subscriptions.push(this.statusbar);
+
+    context.subscriptions.push(
+      commands.registerCommand("toolset-hsp3.select", async () => {
+        const sel = await window.showQuickPick(
+          this.list.map((val) => ({
+            label: val.version,
+            detail: val.path,
+            item: val,
+          }))
+        );
+        if (sel) this.select(sel.item);
+      })
+    );
   }
 
   dispose() {}
@@ -99,18 +123,28 @@ export class Extension implements Disposable {
     if (process.env.HSP3_HOME)
       paths.push(join(process.env.HSP3_HOME, "hsp3cl"));
 
-    const globs = this.config.get<string[]>("globs");
-    if (!globs) return;
+    const globs = this.config.get<string[]>("globs") ?? [];
 
-    globs.forEach((pattern) => {
-      if (isGlob(pattern)) patterns.push(promisify(glob)(pattern));
+    if (0) {
+      globs.forEach((pattern) => {
+        if (isGlob(pattern)) patterns.push(glob2(pattern));
+        else paths.push(pattern);
+      });
+
+      (await Promise.allSettled(patterns)).forEach((v) => {
+        if (v.status === "fulfilled") paths.concat(v.value);
+        else errors.push(v.reason);
+      });
+    }
+
+    console.log(glob);
+
+    globs.forEach(async (pattern) => {
+      if (isGlob(pattern)) paths.concat(await glob2(pattern));
       else paths.push(pattern);
     });
 
-    (await Promise.allSettled(patterns)).forEach((v) => {
-      if (v.status === "fulfilled") paths.concat(v.value);
-      else errors.push(v.reason);
-    });
+    console.log(paths);
 
     paths = paths.map((el) => normalize(el));
     paths = paths.filter((el, i) => paths.indexOf(el) === i);
@@ -136,9 +170,47 @@ export class Extension implements Disposable {
     return result;
   }
 
-  async update() {
-    this.list = (await this.listing()) ?? [];
+  draw() {
+    if (this.current) {
+      this.statusbar.text = this.current.version;
+      if (this.statusbar.command)
+        this.statusbar.command.tooltip = this.current.path;
+    } else {
+      this.statusbar.text = "none";
+      if (this.statusbar.command) this.statusbar.command.tooltip = "none";
+    }
   }
 
-  select() {}
+  findIndex(item: Item): number {
+    return this.list.findIndex(
+      (val) =>
+        val.dirname === item.dirname &&
+        val.path === item.path &&
+        val.version === item.version
+    );
+  }
+
+  load() {
+    const sel = this.config.get<Item>("current");
+    if (sel) {
+      const index = this.findIndex(sel);
+      if (index >= 0) {
+        this.current = sel;
+        this.draw();
+      }
+    }
+  }
+
+  async update(load: boolean = false) {
+    this.list = (await this.listing()) ?? [];
+    if (load) this.load();
+  }
+
+  select(item: Item) {
+    if (this.findIndex(item) >= 0) this.current = item;
+    else this.current = undefined;
+
+    this.config.update("current", this.current);
+    this.draw();
+  }
 }
