@@ -1,0 +1,76 @@
+{
+  "name": "toolset-hsp3",
+  "version": "0.0.1",
+  "preview": true,
+  "description": "An VSCode extension to automate hsp3root path configuration.",
+  "main": "out/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onLanguage:hsp3"
+  ],
+  "repository": "git@github.com:honobonosun/toolset-hsp3.git",
+  "author": "Honobono",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.22.0"
+  },
+  "displayName": "toolset-hsp3",
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "HSP3",
+    "hsp"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "toolset-hsp3",
+      "properties": {
+        "toolset-hsp3.globs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "scope": "machine"
+        },
+        "toolset-hsp3.current": {
+          "type": "object",
+          "scope": "machine-overridable"
+        }
+      }
+    },
+    "configurationDefaults": {},
+    "commands": [
+      {
+        "command": "toolset-hsp3.select",
+        "title": "select hsp3root",
+        "enablement": "editorLangId == hsp3"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run -S esbuild-base -- --minify",
+    "esbuild-base": "rimraf out && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "build": "npm run -S esbuild-base -- --sourcemap",
+    "watch": "npm run -S esbuild-base -- --sourcemap --watch",
+    "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
+    "test": "eslint src --ext ts && tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/is-glob": "^4.0.2",
+    "@types/vscode": "^1.71.0",
+    "esbuild": "^0.15.10",
+    "eslint": "^8.24.0",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "glob": "^8.0.3",
+    "is-glob": "^4.0.3"
+  }
+}
