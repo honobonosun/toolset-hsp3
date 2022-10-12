@@ -12,7 +12,7 @@ import { glob } from "glob";
 import isGlob = require("is-glob");
 import Registry from "./registry";
 import { exec } from "node:child_process";
-import { join, dirname } from "node:path";
+import { join, dirname, normalize } from "node:path";
 import { stat } from "node:fs/promises";
 
 const pglob = promisify(glob);
@@ -48,14 +48,10 @@ const hsp3clVersion = (
 
 const provider = {
   dispose() {},
-  async resolve(patterns: string[]) {
-    let paths = [] as string[];
+  async resolve(paths: string[]) {
     let errors = [] as any[];
     let items = [] as Item[];
-    (await Promise.allSettled(patterns.map((el) => pglob(el)))).forEach((v) => {
-      if (v.status === "fulfilled") paths = paths.concat(v.value);
-      else errors.push(v.reason);
-    });
+
     for (const el of paths) {
       const result = await hsp3clVersion(el);
       if ("error" in result) errors.push(result.error);
@@ -82,12 +78,7 @@ export function activate(context: ExtensionContext) {
       if (mode.raw) return extension.methods.current();
       else if (mode.path) return extension.methods.current()?.path;
       else if (mode.name) return extension.methods.current()?.name;
-      else {
-        const path = extension.methods.current()?.path;
-        if (!path) return undefined;
-        if ((await stat(path)).isDirectory()) return path;
-        else return dirname(path);
-      }
+      else return await extension.methods.hsp3dir();
     })
   );
   context.subscriptions.push(
@@ -98,8 +89,9 @@ export function activate(context: ExtensionContext) {
   extension.methods.registryToolsetProvider("hsp3cl", provider);
   const cfg = workspace.getConfiguration("toolset-hsp3");
   const cur = cfg.get("current", undefined) as Item | undefined;
-  console.log(cur);
-  if (cur) extension.select(cur);
+  if (cur?.name) extension.select(cur);
+  else extension.select(undefined);
+
   return extension.methods;
 }
 
@@ -120,7 +112,7 @@ class Extension implements Disposable {
       "toolset-hsp3.current",
       { language: "hsp3" }
     );
-    this.langstatbar.text = "text";
+    this.langstatbar.text = "none";
     this.langstatbar.detail = "current hsp3root";
     this.langstatbar.command = {
       command: "toolset-hsp3.select",
@@ -133,6 +125,7 @@ class Extension implements Disposable {
   }
 
   dispose() {
+    this.langstatbar.dispose();
     this.output.dispose();
   }
 
@@ -146,6 +139,12 @@ class Extension implements Disposable {
       };
     },
     current: () => this.current,
+    hsp3dir: async () => {
+      if (!this.current) return undefined;
+      const path = this.current?.path;
+      if ((await stat(path)).isDirectory()) return path;
+      else return dirname(path);
+    },
   };
 
   countup() {
@@ -155,23 +154,26 @@ class Extension implements Disposable {
   async listing() {
     if (this.count.cur === this.count.cnt) return this.items;
 
+    let paths = [] as string[];
     let errors = [] as any[];
     let items = [] as Item[];
     const config = workspace.getConfiguration("toolset-hsp3");
     const globs = (config.get("globs", []) as string[]).concat(hsp3roots);
 
+    (await Promise.allSettled(globs.map((el) => pglob(el)))).forEach((v) => {
+      if (v.status === "fulfilled") paths = paths.concat(v.value);
+      else errors.push(v.reason);
+    });
+    paths = paths.map((el) => normalize(el));
+
     for (const key of this.registry.toolsetProvider.keys()) {
       const el = this.registry.toolsetProvider.value(key);
       if (!el) continue;
-      const result = await el.resolve(globs);
+      const result = await el.resolve(paths);
       errors = errors.concat(result.errors);
       items = items.concat(result.items);
     }
-    errors.forEach((el) => {
-      //const date = new Date();
-      const message = `${el.message}`;
-      this.output.appendLine(message);
-    });
+    errors.forEach((el) => this.output.appendLine(el.message));
     this.count.cur = this.count.cnt;
     this.items = items;
     return items;
@@ -189,10 +191,10 @@ class Extension implements Disposable {
     }
   }
 
-  async select(item: Item) {
+  async select(item: Item | undefined) {
     this.current = item;
     const cfg = workspace.getConfiguration("toolset-hsp3");
-    cfg.update("current", item);
+    cfg.update("current", item, true);
 
     this.update();
   }
@@ -200,7 +202,10 @@ class Extension implements Disposable {
   async showSelect() {
     const fn = async () => {
       const description = (path: string) => {
-        for (const el of hsp3roots) if (el === path) return "$env:HSP3_ROOT";
+        for (const el of hsp3roots.map((el) =>
+          normalize(el).replace(/^\//, "C:\\")
+        ))
+          if (el === path) return "$env:HSP3_ROOT";
         return undefined;
       };
 

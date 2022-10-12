@@ -1,14 +1,17 @@
 {
   "name": "toolset-hsp3",
-  "version": "0.0.1",
+  "version": "0.4.0",
   "preview": true,
   "description": "An VSCode extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
+  "readme": "./readme.md",
   "extensionKind": [
     "workspace"
   ],
   "activationEvents": [
-    "onLanguage:hsp3"
+    "onLanguage:hsp3",
+    "onCommand:toolset-hsp3.select",
+    "onCommand:toolset-hsp3.current"
   ],
   "repository": "git@github.com:honobonosun/toolset-hsp3.git",
   "author": "Honobono",
@@ -23,7 +26,8 @@
   ],
   "keywords": [
     "HSP3",
-    "hsp"
+    "hsp",
+    "auto-configuration"
   ],
   "contributes": {
     "configuration": {
@@ -34,11 +38,15 @@
           "items": {
             "type": "string"
           },
-          "scope": "machine"
+          "default": [
+            "/hsp3*"
+          ],
+          "scope": "machine",
+          "markdownDescription": "[node-glob](https://www.npmjs.com/package/glob) pattern indicating the directory where HSP3 is installed."
         },
         "toolset-hsp3.current": {
           "type": "object",
-          "scope": "machine-overridable"
+          "scope": "machine"
         }
       }
     },
@@ -46,8 +54,12 @@
     "commands": [
       {
         "command": "toolset-hsp3.select",
-        "title": "select hsp3root",
-        "enablement": "editorLangId == hsp3"
+        "title": "select hsp3root"
+      },
+      {
+        "title": "insider:toolset-hsp3.current",
+        "command": "toolset-hsp3.current",
+        "enablement": "false"
       }
     ]
   },
