@@ -9,7 +9,6 @@ import {
 } from "vscode";
 import { promisify } from "node:util";
 import { glob } from "glob";
-import isGlob = require("is-glob");
 import Registry from "./registry";
 import { exec } from "node:child_process";
 import { join, dirname, normalize } from "node:path";
