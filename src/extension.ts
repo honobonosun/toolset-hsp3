@@ -3,7 +3,10 @@ import {
   Disposable,
   ExtensionContext,
   languages,
-  LanguageStatusItem,
+  ShellExecution,
+  Task,
+  tasks,
+  TaskScope,
   window,
   workspace,
 } from "vscode";
@@ -13,6 +16,7 @@ import Registry from "./registry";
 import { exec } from "node:child_process";
 import { join, dirname, normalize } from "node:path";
 import { stat } from "node:fs/promises";
+import { platform } from "node:os";
 
 const pglob = promisify(glob);
 
@@ -91,6 +95,34 @@ export function activate(context: ExtensionContext) {
   if (cur?.name) extension.select(cur);
   else extension.select(undefined);
 
+  context.subscriptions.push(
+    commands.registerCommand("toolset-hsp3.open", async () => {
+      const hsp3dir = await extension.methods.hsp3dir();
+      if (!hsp3dir) return;
+      const command = ((path) => {
+        switch (platform()) {
+          case "win32":
+            return "explorer.exe .";
+          case "darwin":
+            return `open ${path}`;
+          default:
+            return process.env.WSL_DISTRO_NAME !== undefined
+              ? "explorer.exe ."
+              : "xdg-open .";
+        }
+      })(hsp3dir);
+      tasks.executeTask(
+        new Task(
+          { type: "shell", command, cwd: hsp3dir },
+          TaskScope.Workspace,
+          "toolset-hsp3 taskrunner",
+          "toolset-hsp3.taskrunner",
+          new ShellExecution(command, { cwd: hsp3dir })
+        )
+      );
+    })
+  );
+
   return extension.methods;
 }
 
@@ -120,6 +152,7 @@ class Extension implements Disposable {
 
     this.registry = {
       toolsetProvider: new Registry<Provider>(),
+      listener: new Map<Symbol, (cur: Item | undefined) => void>(),
     };
   }
 
@@ -143,6 +176,15 @@ class Extension implements Disposable {
       const path = this.current?.path;
       if ((await stat(path)).isDirectory()) return path;
       else return dirname(path);
+    },
+    onDidChangeCurrent: (callback: (cur: Item | undefined) => void) => {
+      const symbol = Symbol();
+      this.registry.listener.set(symbol, (cur) => callback(cur));
+      return {
+        dispose: () => {
+          this.registry.listener.delete(symbol);
+        },
+      };
     },
   };
 
@@ -194,7 +236,7 @@ class Extension implements Disposable {
     this.current = item;
     const cfg = workspace.getConfiguration("toolset-hsp3");
     cfg.update("current", item, true);
-
+    this.registry.listener.forEach((el) => el(this.current));
     this.update();
   }
 
