@@ -78,9 +78,9 @@ export function activate(context: ExtensionContext) {
   );
   context.subscriptions.push(
     commands.registerCommand("toolset-hsp3.current", async (mode) => {
-      if (mode.raw) return extension.methods.current();
-      else if (mode.path) return extension.methods.current()?.path;
-      else if (mode.name) return extension.methods.current()?.name;
+      if ("raw" in mode) return extension.methods.current();
+      else if ("path" in mode) return extension.methods.current()?.path;
+      else if ("name" in mode) return extension.methods.current()?.name;
       else return await extension.methods.hsp3dir();
     })
   );
