@@ -12,7 +12,8 @@
   "activationEvents": [
     "onLanguage:hsp3",
     "onCommand:toolset-hsp3.select",
-    "onCommand:toolset-hsp3.current"
+    "onCommand:toolset-hsp3.current",
+    "onCommand:toolset-hsp3.open"
   ],
   "repository": "git@github.com:honobonosun/toolset-hsp3.git",
   "author": "Honobono",
