@@ -105,3 +105,4 @@ dist
 
 # User settings
 out
+*.vsix
