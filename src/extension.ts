@@ -65,7 +65,7 @@ const provider = {
 };
 
 export function activate(context: ExtensionContext) {
-  console.log("activate toolset-hsp3");
+  //console.log("activate toolset-hsp3");
 
   const extension = new Extension(context);
   context.subscriptions.push(extension);
@@ -77,11 +77,13 @@ export function activate(context: ExtensionContext) {
     )
   );
   context.subscriptions.push(
-    commands.registerCommand("toolset-hsp3.current", async (mode) =>
-      mode === undefined
+    commands.registerCommand("toolset-hsp3.current", async (mode) => {
+      if (Array.isArray(mode) && mode[0] === "${command:toolset-hsp3.current}")
+        return await extension.methods.hsp3dir();
+      return mode === undefined
         ? await extension.methods.hsp3dir()
-        : extension.methods.current()
-    )
+        : extension.methods.current();
+    })
   );
   context.subscriptions.push(
     workspace.onDidChangeConfiguration((e) => {
@@ -114,7 +116,7 @@ export function activate(context: ExtensionContext) {
         new Task(
           { type: "shell", command, cwd: hsp3dir },
           TaskScope.Workspace,
-          "toolset-hsp3 taskrunner",
+          "open hsp3root",
           "toolset-hsp3.taskrunner",
           new ShellExecution(command, { cwd: hsp3dir })
         )
@@ -126,7 +128,7 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate() {
-  console.log("deactivate toolset-hsp3");
+  //console.log("deactivate toolset-hsp3");
 }
 
 class Extension implements Disposable {
