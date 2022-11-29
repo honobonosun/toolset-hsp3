@@ -86,6 +86,11 @@ export function activate(context: ExtensionContext) {
     })
   );
   context.subscriptions.push(
+    commands.registerCommand("toolset-hsp3.current.toString", () =>
+      extension.methods.hsp3dir()
+    )
+  );
+  context.subscriptions.push(
     workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("toolset-hsp3.globs")) extension.countup();
     })

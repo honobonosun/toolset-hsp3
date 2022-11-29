@@ -1,5 +1,9 @@
 # toolset-hsp3 changelog
 
+## 2022/11/29 ver 0.5.4
+- *add* toolset-hsp3.current.toString コマンドを追加しました。
+  - このコマンドの返り値はString型のHSP3開発環境のパスか、未指定を示すundefinedです。
+
 ## 2022/10/19 ver 0.5.3
 - *fix toolset-hsp3.currentコマンドが[Command variables](https://code.visualstudio.com/docs/editor/variables-reference#_command-variables)に対応できていなかったのを修正しました。
 
