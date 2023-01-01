@@ -41,10 +41,10 @@ const hsp3clVersion = (
 ): Promise<{ path: string; version: string } | { error: any }> =>
   new Promise(async (resolve, reject) => {
     let cmd = path;
-    if ((await stat(path)).isDirectory()) cmd = join(path, "hsp3cl.exe");
+    if ((await stat(path)).isDirectory()) cmd = join(path, "hsp3cl");
     exec(cmd, (error, stdout) => {
       const r = stdout.match(/ver(.*?) /);
-      if (r && r[1]) resolve({ path, version: r[1] });
+      if (r && r[1]) resolve({ path: cmd, version: r[1] });
       else resolve({ error });
     });
   });
@@ -58,7 +58,7 @@ const provider = {
     for (const el of paths) {
       const result = await hsp3clVersion(el);
       if ("error" in result) errors.push(result.error);
-      else items.push({ path: el, name: result.version });
+      else items.push({ path: result.path, name: result.version });
     }
     return { errors, items };
   },
