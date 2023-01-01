@@ -252,11 +252,13 @@ class Extension implements Disposable {
         for (const el of hsp3roots.map((el) =>
           normalize(el).replace(/^\//, "C:\\")
         ))
-          if (el === path) return "$env:HSP3_ROOT";
+          if (el === dirname(path)) return "$env:HSP3_ROOT";
         return undefined;
       };
 
       const items = await this.listing();
+      console.log(items, hsp3roots);
+      
       if (!items) return [];
       return items.map((el) => ({
         label: el.name,
