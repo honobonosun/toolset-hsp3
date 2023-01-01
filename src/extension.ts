@@ -257,8 +257,6 @@ class Extension implements Disposable {
       };
 
       const items = await this.listing();
-      console.log(items, hsp3roots);
-      
       if (!items) return [];
       return items.map((el) => ({
         label: el.name,
