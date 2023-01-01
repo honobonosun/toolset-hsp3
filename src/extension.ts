@@ -3,6 +3,7 @@ import {
   Disposable,
   ExtensionContext,
   languages,
+  LanguageStatusSeverity,
   ShellExecution,
   Task,
   tasks,
@@ -201,28 +202,44 @@ class Extension implements Disposable {
   async listing() {
     if (this.count.cur === this.count.cnt) return this.items;
 
-    let paths = [] as string[];
-    let errors = [] as any[];
+    this.langstatbar.busy = true;
     let items = [] as Item[];
-    const config = workspace.getConfiguration("toolset-hsp3");
-    const globs = (config.get("globs", []) as string[]).concat(hsp3roots);
+    try {
+      let paths = [] as string[];
+      let errors = [] as any[];
 
-    (await Promise.allSettled(globs.map((el) => pglob(el)))).forEach((v) => {
-      if (v.status === "fulfilled") paths = paths.concat(v.value);
-      else errors.push(v.reason);
-    });
-    paths = paths.map((el) => normalize(el));
+      const config = workspace.getConfiguration("toolset-hsp3");
+      const globs = (config.get("globs", []) as string[]).concat(hsp3roots);
 
-    for (const key of this.registry.toolsetProvider.keys()) {
-      const el = this.registry.toolsetProvider.value(key);
-      if (!el) continue;
-      const result = await el.resolve(paths);
-      errors = errors.concat(result.errors);
-      items = items.concat(result.items);
+      (await Promise.allSettled(globs.map((el) => pglob(el)))).forEach((v) => {
+        if (v.status === "fulfilled") paths = paths.concat(v.value);
+        else errors.push(v.reason);
+      });
+      paths = paths.map((el) => normalize(el));
+
+      for (const key of this.registry.toolsetProvider.keys()) {
+        const el = this.registry.toolsetProvider.value(key);
+        if (!el) continue;
+        const result = await el.resolve(paths);
+        errors = errors.concat(result.errors);
+        items = items.concat(result.items);
+      }
+      if (errors.length > 0) {
+        this.output.appendLine("# Toolset Provider Log");
+        errors.forEach((el) => this.output.appendLine(el.toString()));
+      }
+      this.count.cur = this.count.cnt;
+      this.items = items;
+    } catch (error) {
+      const err = error as Error;
+      this.output.appendLine("# Toolset Provider Panic Log");
+      this.output.appendLine(err.message);
+      if (err.stack) this.output.appendLine(err.stack);
+      this.output.show(true);
+    } finally {
+      this.langstatbar.busy = false;
     }
-    errors.forEach((el) => this.output.appendLine(el.message));
-    this.count.cur = this.count.cnt;
-    this.items = items;
+
     return items;
   }
 
@@ -231,10 +248,12 @@ class Extension implements Disposable {
       this.langstatbar.text = this.current.name;
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = this.current.path;
+      this.langstatbar.severity = LanguageStatusSeverity.Information;
     } else {
       this.langstatbar.text = "none";
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = undefined;
+      this.langstatbar.severity = LanguageStatusSeverity.Warning;
     }
   }
 
