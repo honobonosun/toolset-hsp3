@@ -1,5 +1,17 @@
 # toolset-hsp3 changelog
 
+## 2022/01/21 ver 0.6.1
+- *fix* [#4](https://github.com/honobonosun/toolset-hsp3/issues/4)の修正を行いました。
+
+## 2023/01/01 ver 0.6.0
+- *update* hsp3rootの状態表示を強調するように変更しました。
+  - 環境検索中はビジー表示されるようになりました。
+  - 選択がnoneの場合はワーニング表示されるようになりました。
+- *update* ToolsetProviderのログ表示に通常ログとパニックログの2種類に分けました。
+  - 通常ログは、Provider側でエラー処理し終えたログが出力されます。
+  - パニックログは、Provider側で拾われなかったエラーを拾ってログに出力します。
+  - この二つは、従来通りtoolset-hsp3出力ペインに表示されます。
+
 ## 2022/11/29 ver 0.5.4
 - *add* toolset-hsp3.current.toString コマンドを追加しました。
   - このコマンドの返り値はString型のHSP3開発環境のパスか、未指定を示すundefinedです。
