@@ -14,7 +14,7 @@ import {
 import { promisify } from "node:util";
 import { glob } from "glob";
 import Registry from "./registry";
-import { exec } from "node:child_process";
+import { execFile } from "node:child_process";
 import { join, dirname, normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { platform } from "node:os";
@@ -43,7 +43,7 @@ const hsp3clVersion = (
   new Promise(async (resolve, reject) => {
     let cmd = path;
     if ((await stat(path)).isDirectory()) cmd = join(path, "hsp3cl.exe");
-    exec(cmd, (error, stdout) => {
+    execFile(cmd, (error, stdout) => {
       const r = stdout.match(/ver(.*?) /);
       if (r && r[1]) resolve({ path, version: r[1] });
       else resolve({ error });
