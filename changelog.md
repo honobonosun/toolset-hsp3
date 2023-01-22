@@ -1,5 +1,8 @@
 # toolset-hsp3 changelog
 
+## 2022/01/22 ver 0.6.2
+- *fix* Windowsで動作しない不具合を修正しました。
+
 ## 2022/01/21 ver 0.6.1
 - *fix* [#4](https://github.com/honobonosun/toolset-hsp3/issues/4)の修正を行いました。
 
