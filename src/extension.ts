@@ -42,7 +42,14 @@ const hsp3clVersion = (
 ): Promise<{ path: string; version: string } | { error: any }> =>
   new Promise(async (resolve, reject) => {
     let cmd = path;
-    if ((await stat(path)).isDirectory()) cmd = join(path, "hsp3cl");
+    if ((await stat(path)).isDirectory()) {
+      cmd = join(path, "hsp3cl");
+      try {
+        await stat(cmd);
+      } catch (e) {
+        cmd += ".exe";
+      }
+    }
     execFile(cmd, (error, stdout) => {
       const r = stdout.match(/ver(.*?) /);
       if (r && r[1]) resolve({ path: cmd, version: r[1] });
@@ -179,8 +186,8 @@ class Extension implements Disposable {
     },
     current: () => this.current,
     hsp3dir: async () => {
-      if (!this.current) return undefined;
-      const path = this.current?.path;
+      if (!this.current?.path) return undefined;
+      const path = this.current.path;
       if ((await stat(path)).isDirectory()) return path;
       else return dirname(path);
     },
