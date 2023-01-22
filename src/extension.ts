@@ -42,10 +42,17 @@ const hsp3clVersion = (
 ): Promise<{ path: string; version: string } | { error: any }> =>
   new Promise(async (resolve, reject) => {
     let cmd = path;
-    if ((await stat(path)).isDirectory()) cmd = join(path, "hsp3cl.exe");
+    if ((await stat(path)).isDirectory()) {
+      cmd = join(path, "hsp3cl");
+      try {
+        await stat(cmd);
+      } catch (e) {
+        cmd += ".exe";
+      }
+    }
     execFile(cmd, (error, stdout) => {
       const r = stdout.match(/ver(.*?) /);
-      if (r && r[1]) resolve({ path, version: r[1] });
+      if (r && r[1]) resolve({ path: cmd, version: r[1] });
       else resolve({ error });
     });
   });
@@ -59,7 +66,7 @@ const provider = {
     for (const el of paths) {
       const result = await hsp3clVersion(el);
       if ("error" in result) errors.push(result.error);
-      else items.push({ path: el, name: result.version });
+      else items.push({ path: result.path, name: result.version });
     }
     return { errors, items };
   },
@@ -179,8 +186,8 @@ class Extension implements Disposable {
     },
     current: () => this.current,
     hsp3dir: async () => {
-      if (!this.current) return undefined;
-      const path = this.current?.path;
+      if (!this.current?.path) return undefined;
+      const path = this.current.path;
       if ((await stat(path)).isDirectory()) return path;
       else return dirname(path);
     },
@@ -271,7 +278,7 @@ class Extension implements Disposable {
         for (const el of hsp3roots.map((el) =>
           normalize(el).replace(/^\//, "C:\\")
         ))
-          if (el === path) return "$env:HSP3_ROOT";
+          if (el === dirname(path)) return "$env:HSP3_ROOT";
         return undefined;
       };
 
