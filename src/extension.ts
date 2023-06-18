@@ -75,41 +75,28 @@ const provider = {
 export function activate(context: ExtensionContext) {
   //console.log("activate toolset-hsp3");
 
+  // class
   const extension = new Extension(context);
-  context.subscriptions.push(extension);
+  const other = new Other(extension.methods);
+  context.subscriptions.push(other, extension);
+
+  // command
   context.subscriptions.push(
     commands.registerCommand(
       "toolset-hsp3.select",
       extension.showSelect,
       extension
-    )
-  );
-  context.subscriptions.push(
+    ),
     commands.registerCommand("toolset-hsp3.current", async (mode) => {
       if (Array.isArray(mode) && mode[0] === "${command:toolset-hsp3.current}")
         return await extension.methods.hsp3dir();
       return mode === undefined
         ? await extension.methods.hsp3dir()
         : extension.methods.current();
-    })
-  );
-  context.subscriptions.push(
+    }),
     commands.registerCommand("toolset-hsp3.current.toString", () =>
       extension.methods.hsp3dir()
-    )
-  );
-  context.subscriptions.push(
-    workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("toolset-hsp3.globs")) extension.countup();
-    })
-  );
-  extension.methods.registryToolsetProvider("hsp3cl", provider);
-  const cfg = workspace.getConfiguration("toolset-hsp3");
-  const cur = cfg.get("current", undefined) as Item | undefined;
-  if (cur?.name) extension.select(cur);
-  else extension.select(undefined);
-
-  context.subscriptions.push(
+    ),
     commands.registerCommand("toolset-hsp3.open", async () => {
       const hsp3dir = await extension.methods.hsp3dir();
       if (!hsp3dir) return;
@@ -134,8 +121,25 @@ export function activate(context: ExtensionContext) {
           new ShellExecution(command, { cwd: hsp3dir })
         )
       );
+    }),
+    commands.registerCommand("toolset-hsp3.update", () => {
+      other.update();
     })
   );
+
+  // config
+  context.subscriptions.push(
+    workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("toolset-hsp3.globs")) extension.countup();
+    })
+  );
+
+  // setup
+  extension.methods.registryToolsetProvider("hsp3cl", provider);
+  const cfg = workspace.getConfiguration("toolset-hsp3");
+  const cur = cfg.get("current", undefined) as Item | undefined;
+  if (cur?.name) extension.select(cur);
+  else extension.select(undefined);
 
   return extension.methods;
 }
@@ -293,5 +297,35 @@ class Extension implements Disposable {
     };
     const sel = await window.showQuickPick(fn());
     if (sel) this.select(sel.item);
+  }
+}
+
+class Other implements Disposable {
+  constructor(private methods: Extension["methods"]) {}
+
+  dispose() {}
+
+  async update(override: boolean = true) {
+    const mycfg = workspace.getConfiguration("toolset-hsp3");
+    if (!mycfg.get("override")) return;
+    {
+      const cfg = workspace.getConfiguration("hsp3-debug-window-adapter");
+      console.log(
+        "hsp3-root",
+        cfg.has("hsp3-root"),
+        `"${cfg.get("hsp3-root")}"`
+      );
+    }
+    {
+      const cfg = workspace.getConfiguration(
+        "hsp3-debug-window-adapter",
+        workspace.workspaceFile
+      );
+      console.log(
+        "hsp3-root-null",
+        cfg.has("hsp3-root"),
+        `"${cfg.get("hsp3-root")}"`
+      );
+    }
   }
 }

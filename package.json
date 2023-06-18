@@ -50,6 +50,10 @@
         "toolset-hsp3.current": {
           "type": "object",
           "scope": "machine"
+        },
+        "toolset-hsp3.override": {
+          "type": "boolean",
+          "scope": "machine"
         }
       }
     },
@@ -63,6 +67,11 @@
       {
         "command": "toolset-hsp3.open",
         "title": "open hsp3root file manager",
+        "category": "hsp.toolset"
+      },
+      {
+        "command": "toolset-hsp3.update",
+        "title": "override other extension settings",
         "category": "hsp.toolset"
       },
       {
