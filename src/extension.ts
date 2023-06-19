@@ -13,11 +13,12 @@ import {
 } from "vscode";
 import { promisify } from "node:util";
 import { glob } from "glob";
-import Registry from "./registry";
 import { execFile } from "node:child_process";
 import { join, dirname, normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { platform } from "node:os";
+import Registry from "./registry";
+import { Override } from "./override";
 
 const pglob = promisify(glob);
 
@@ -77,7 +78,7 @@ export function activate(context: ExtensionContext) {
 
   // class
   const extension = new Extension(context);
-  const other = new Other(extension.methods);
+  const other = new Override(extension.methods);
   context.subscriptions.push(other, extension);
 
   // command
@@ -122,8 +123,8 @@ export function activate(context: ExtensionContext) {
         )
       );
     }),
-    commands.registerCommand("toolset-hsp3.update", () => {
-      other.update();
+    commands.registerCommand("toolset-hsp3.override", () => {
+      other.override();
     })
   );
 
@@ -148,13 +149,13 @@ export function deactivate() {
   //console.log("deactivate toolset-hsp3");
 }
 
-class Extension implements Disposable {
+export class Extension implements Disposable {
   private langstatbar;
   private registry;
   private count = { cur: Symbol(), cnt: Symbol() };
   private items = undefined as Item[] | undefined;
   private current = undefined as Item | undefined;
-  private output = window.createOutputChannel("toolset-hsp3", "hsp3");
+  private output = window.createOutputChannel("toolset-hsp3");
 
   constructor(private context: ExtensionContext) {
     this.langstatbar = languages.createLanguageStatusItem(
@@ -297,35 +298,5 @@ class Extension implements Disposable {
     };
     const sel = await window.showQuickPick(fn());
     if (sel) this.select(sel.item);
-  }
-}
-
-class Other implements Disposable {
-  constructor(private methods: Extension["methods"]) {}
-
-  dispose() {}
-
-  async update(override: boolean = true) {
-    const mycfg = workspace.getConfiguration("toolset-hsp3");
-    if (!mycfg.get("override")) return;
-    {
-      const cfg = workspace.getConfiguration("hsp3-debug-window-adapter");
-      console.log(
-        "hsp3-root",
-        cfg.has("hsp3-root"),
-        `"${cfg.get("hsp3-root")}"`
-      );
-    }
-    {
-      const cfg = workspace.getConfiguration(
-        "hsp3-debug-window-adapter",
-        workspace.workspaceFile
-      );
-      console.log(
-        "hsp3-root-null",
-        cfg.has("hsp3-root"),
-        `"${cfg.get("hsp3-root")}"`
-      );
-    }
   }
 }

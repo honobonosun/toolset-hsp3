@@ -10,11 +10,7 @@
     "workspace"
   ],
   "activationEvents": [
-    "onLanguage:hsp3",
-    "onCommand:toolset-hsp3.select",
-    "onCommand:toolset-hsp3.current",
-    "onCommand:toolset-hsp3.open",
-    "onCommand:toolset-hsp3.current.toString"
+    "onLanguage:hsp3"
   ],
   "repository": "git@github.com:honobonosun/toolset-hsp3.git",
   "author": "Honobono",
@@ -51,9 +47,35 @@
           "type": "object",
           "scope": "machine"
         },
-        "toolset-hsp3.override": {
+        "toolset-hsp3.override.enable": {
           "type": "boolean",
-          "scope": "machine"
+          "markdownDescription": "Override the extension settings in override.list with the current hsp3root.",
+          "scope": "window"
+        },
+        "toolset-hsp3.override.scope": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "scope": "window"
+        },
+        "toolset-hsp3.override.applyChangesImmediately": {
+          "type": "boolean",
+          "scope": "window"
+        },
+        "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
+          "type": "boolean",
+          "scope": "window"
+        },
+        "toolset-hsp3.override.list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "hoge.fuga"
+          ],
+          "scope": "window"
         }
       }
     },
@@ -70,7 +92,7 @@
         "category": "hsp.toolset"
       },
       {
-        "command": "toolset-hsp3.update",
+        "command": "toolset-hsp3.override",
         "title": "override other extension settings",
         "category": "hsp.toolset"
       },
