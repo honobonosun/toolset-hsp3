@@ -9,7 +9,7 @@
 
 # 他の拡張機能の設定上書き機能について
 
-v0.7.xで、override機能を実装しました。この機能は、"toolset-hsp3.override.list"に登録した設定IDに対して、現在選択されているhsp3rootの値で上書きします。
+override機能を実装しました。この機能は、"toolset-hsp3.override.list"に登録した設定IDに対して、現在選択されているhsp3rootの値で上書きします。
 上書き保存なので、以前の設定内容は消えてしまいます。以前の環境に戻せるように、事前に"toolset-hsp3.globs"へ登録してください。
 
 override機能は、"toolset-hsp3.override.enable"をtrueに設定する事で有効化されます。
