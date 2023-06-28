@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "preview": true,
   "description": "An VSCode extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
@@ -50,22 +50,15 @@
         "toolset-hsp3.override.enable": {
           "type": "boolean",
           "markdownDescription": "Override the extension settings in override.list with the current hsp3root.",
-          "scope": "window"
-        },
-        "toolset-hsp3.override.scope": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "scope": "window"
+          "scope": "machine"
         },
         "toolset-hsp3.override.applyChangesImmediately": {
           "type": "boolean",
-          "scope": "window"
+          "scope": "machine"
         },
         "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
           "type": "boolean",
-          "scope": "window"
+          "scope": "machine"
         },
         "toolset-hsp3.override.list": {
           "type": "array",
@@ -75,7 +68,7 @@
           "default": [
             "hoge.fuga"
           ],
-          "scope": "window"
+          "scope": "machine"
         }
       }
     },
