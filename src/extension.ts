@@ -261,11 +261,25 @@ export class Extension implements Disposable {
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = this.current.path;
       this.langstatbar.severity = LanguageStatusSeverity.Information;
+
+      this.context.environmentVariableCollection.clear();
+      this.context.environmentVariableCollection.replace(
+        "HSP3_ROOT",
+        dirname(this.current.path)
+      );/*
+      this.context.environmentVariableCollection.append(
+        "PATH",
+        `${platform() === "win32" ? ";" : ":"}${dirname(this.current.path)}`
+      );
+      */
+      this.context.environmentVariableCollection
     } else {
       this.langstatbar.text = "none";
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = undefined;
       this.langstatbar.severity = LanguageStatusSeverity.Warning;
+
+      this.context.environmentVariableCollection.clear();
     }
   }
 
