@@ -43,10 +43,6 @@
           "scope": "machine",
           "markdownDescription": "[node-glob](https://www.npmjs.com/package/glob) pattern indicating the directory where HSP3 is installed."
         },
-        "toolset-hsp3.current": {
-          "type": "object",
-          "scope": "machine"
-        },
         "toolset-hsp3.override.enable": {
           "type": "boolean",
           "markdownDescription": "Override the extension settings in override.list with the current hsp3root.",
@@ -68,6 +64,25 @@
           "default": [
             "hoge.fuga"
           ],
+          "scope": "machine"
+        },
+        "toolset-hsp3.override.ignores": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "toolset-hsp3\\.*"
+          ],
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.enable": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine"
+        },
+        "toolset-hsp3.test.path": {
+          "type": "string",
           "scope": "machine"
         }
       }
@@ -112,6 +127,8 @@
   "devDependencies": {
     "@types/glob": "^8.0.0",
     "@types/is-glob": "^4.0.2",
+    "@types/micromatch": "^4.0.2",
+    "@types/semver": "^7.5.0",
     "@types/vscode": "^1.71.0",
     "esbuild": "^0.15.10",
     "eslint": "^8.24.0",
@@ -121,6 +138,28 @@
   },
   "dependencies": {
     "glob": "^8.0.3",
-    "is-glob": "^4.0.3"
+    "is-glob": "^4.0.3",
+    "micromatch": "^4.0.5",
+    "semver": "^7.5.4",
+    "zod": "^3.21.4"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "toolset-hsp3": {
+    "version": "1.0.0",
+    "enable": true,
+    "settings": [
+      {
+        "id": "toolset-hsp3.test.path",
+        "value": [
+          "%HSP3_ROOT%",
+          "test"
+        ]
+      }
+    ],
+    "reloadWindow": false
   }
 }

@@ -19,6 +19,7 @@ import { stat } from "node:fs/promises";
 import { platform } from "node:os";
 import Registry from "./registry";
 import { Override } from "./override";
+import { EXTENSION_NAME } from "./constant";
 
 const pglob = promisify(glob);
 
@@ -78,8 +79,8 @@ export function activate(context: ExtensionContext) {
 
   // class
   const extension = new Extension(context);
-  const other = new Override(extension.methods);
-  context.subscriptions.push(other, extension);
+  const override = new Override(context, extension.methods);
+  context.subscriptions.push(extension, override);
 
   // command
   context.subscriptions.push(
@@ -124,7 +125,7 @@ export function activate(context: ExtensionContext) {
       );
     }),
     commands.registerCommand("toolset-hsp3.override", () => {
-      other.override();
+      override.override();
     })
   );
 
@@ -137,10 +138,16 @@ export function activate(context: ExtensionContext) {
 
   // setup
   extension.methods.registryToolsetProvider("hsp3cl", provider);
+
+  const cur = context.workspaceState.get("current") as Item | undefined;
+  extension.select(cur);
+
+  /*
   const cfg = workspace.getConfiguration("toolset-hsp3");
   const cur = cfg.get("current", undefined) as Item | undefined;
   if (cur?.name) extension.select(cur);
   else extension.select(undefined);
+  */
 
   return extension.methods;
 }
@@ -262,17 +269,20 @@ export class Extension implements Disposable {
         this.langstatbar.command.tooltip = this.current.path;
       this.langstatbar.severity = LanguageStatusSeverity.Information;
 
-      this.context.environmentVariableCollection.clear();
-      this.context.environmentVariableCollection.replace(
-        "HSP3_ROOT",
-        dirname(this.current.path)
-      );/*
-      this.context.environmentVariableCollection.append(
-        "PATH",
-        `${platform() === "win32" ? ";" : ":"}${dirname(this.current.path)}`
-      );
-      */
-      this.context.environmentVariableCollection
+      const cfg = workspace.getConfiguration(EXTENSION_NAME);
+      if (cfg.get("task.env.enable") === true) {
+        this.context.environmentVariableCollection.clear();
+        this.context.environmentVariableCollection.replace(
+          "HSP3_ROOT",
+          dirname(this.current.path)
+        );
+        /*
+        this.context.environmentVariableCollection.append(
+          "PATH",
+          `${platform() === "win32" ? ";" : ":"}${dirname(this.current.path)}`
+        );
+        */
+      }
     } else {
       this.langstatbar.text = "none";
       if (this.langstatbar.command)
@@ -285,8 +295,17 @@ export class Extension implements Disposable {
 
   async select(item: Item | undefined) {
     this.current = item;
+
+    // 拡張機能のストレージに保存する
+    this.context.workspaceState.update("current", item);
+
+    // settings.jsonに保存する
+    /*
     const cfg = workspace.getConfiguration("toolset-hsp3");
     cfg.update("current", item, true);
+    */
+
+    // リスナーへ通知
     this.registry.listener.forEach((el) => el(this.current));
     this.update();
   }

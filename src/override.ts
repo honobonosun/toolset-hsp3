@@ -1,40 +1,94 @@
-import { Disposable, commands, extensions, window, workspace } from "vscode";
+import {
+  Disposable,
+  ExtensionContext,
+  ExtensionKind,
+  commands,
+  extensions,
+  window,
+  workspace,
+} from "vscode";
 import { Extension } from "./extension";
+import { ZodError, z } from "zod";
+import { EXTENSION_NAME } from "./constant";
+import * as path from "node:path";
+import * as os from "node:os";
+import * as semver from "semver";
+import * as micromatch from "micromatch";
 
-interface PackageElm {
-  antiOverride?: boolean;
-  reloadWindow?: boolean;
-}
+const zContributes = z.object({
+  version: z.string(),
+  enable: z.boolean(),
+  settings: z.optional(
+    z.array(
+      z.object({
+        id: z.string(),
+        value: z.union([z.string(), z.array(z.string())]),
+        platform: z.optional(z.string()),
+      })
+    )
+  ),
+  reloadWindow: z.optional(z.boolean()),
+});
 
-interface overrideItem {
-  raw: string;
+type TypedContributes = z.infer<typeof zContributes>;
+
+interface Setting {
+  report: string;
   publisher: string;
-  extension: string;
+  section: string;
   key: string;
+  value: string[];
+  platform?: string;
 }
 
-const splitRegexp = /(.*?)(?:\.)(.*?)(?:\.)(.*)/;
+interface SettingStruct {
+  reload: boolean;
+  settings: Setting[];
+}
 
-const memo = new Map<string, PackageElm>(); // packageJSONが動的に上書きされるのであれば、このメモ化は同期不良を起こします。
+const splitRegexp = {
+  long: /(.*?)(?:\.)(.*?)(?:\.)(.*)/,
+  short: /(.*?)(?:\.)(.*)/,
+};
+
+const replaceRegexp = /%(.*?)%/g;
 
 export class Override implements Disposable {
-  subscriptions: Disposable[] = [];
-  init = true;
-  constructor(private methods: Extension["methods"]) {
+  private subscriptions: Disposable[] = [];
+  private init = false;
+  private hsp3root: string | undefined;
+  private cfg = workspace.getConfiguration(EXTENSION_NAME);
+  private sc = new Map<string, string>();
+  private struct: SettingStruct | undefined;
+
+  constructor(
+    private context: ExtensionContext,
+    private methods: Extension["methods"]
+  ) {
     this.subscriptions.push(
       workspace.onDidChangeConfiguration((e) => {
-        const cfg = workspace.getConfiguration("toolset-hsp3");
-        if (cfg.get("override.applyChangesImmediately")) {
-          if (e.affectsConfiguration("toolset-hsp3.override.list"))
+        if (e.affectsConfiguration(EXTENSION_NAME))
+          this.cfg = workspace.getConfiguration(EXTENSION_NAME);
+
+        if (this.cfg.get("override.applyChangesImmediately")) {
+          if (
+            e.affectsConfiguration("toolset-hsp3.override.list") ||
+            e.affectsConfiguration("toolset-hsp3.override.ignores")
+          ) {
+            this.struct = undefined;
             this.override();
+          }
         }
       }),
-      methods.onDidChangeCurrent((item) => {
-        const prevent = this.init;
-        if (this.init === true) this.init = false;
-        const cfg = workspace.getConfiguration("toolset-hsp3");
-        if (cfg.get("override.applyChangesImmediately")) this.override(prevent);
-      })
+      methods.onDidChangeCurrent(async (item) => {
+        await this.updateHsp3Root();
+        const reloadWindow = this.init;
+        if (this.init === false) this.init = true;
+        const cfg = workspace.getConfiguration(EXTENSION_NAME);
+        if (cfg.get("override.applyChangesImmediately"))
+          this.override(reloadWindow);
+      }),
+      extensions.onDidChange(() => this.override())
     );
   }
 
@@ -42,96 +96,232 @@ export class Override implements Disposable {
     for (const item of this.subscriptions) item.dispose();
   }
 
-  split(elm: string): overrideItem | undefined {
-    const result = splitRegexp.exec(elm);
-    if (result?.length === 4) {
-      return {
-        raw: elm,
-        publisher: result[1],
-        extension: result[2],
-        key: result[3],
-      };
-    } else return undefined;
+  logWrite(str: string) {
+    window.showInformationMessage(str);
   }
 
-  packageKind(item: overrideItem): PackageElm | undefined {
-    const extensionId = [item.publisher, item.extension].join(".");
-    if (!memo.has(extensionId)) {
-      const packageJSON = extensions.getExtension(extensionId)?.packageJSON;
-      console.log("packageKind", item.extension, packageJSON);
-
-      if (packageJSON && packageJSON["toolset-hsp3"]) {
-        memo.set(extensionId, {
-          antiOverride: packageJSON["toolset-hsp3"].antiOverride,
-          reloadWindow: packageJSON["toolset-hsp3"].reloadWindow,
-        });
-      } else {
-        memo.set(extensionId, {
-          antiOverride: undefined,
-          reloadWindow: undefined,
-        });
-      }
-    }
-    return memo.get(extensionId);
+  async updateHsp3Root() {
+    this.hsp3root = await this.methods.hsp3dir();
+    if (this.hsp3root) this.sc.set("HSP3_ROOT", this.hsp3root);
+    else this.sc.delete("HSP3_ROOT");
   }
 
-  async override(prevent: boolean = false) {
-    const mycfg = workspace.getConfiguration("toolset-hsp3");
+  getExtensionAllJSON() {
+    let list = [] as { id: string; json: any }[];
+    extensions.all.forEach((elm) => {
+      list.push({ id: elm.id, json: elm.packageJSON });
+    });
+    return list;
+  }
 
-    if (!mycfg.get("override.enable")) return;
-    const scope = true;
+  split = {
+    section_key: (word: string) => {
+      const reval = splitRegexp.short.exec(word);
+      if (reval?.length === 3)
+        return {
+          raw: reval[0],
+          section: reval[1],
+          key: reval[2],
+        };
+      else return undefined;
+    },
+    publisher: (word: string) => {
+      const reval = splitRegexp.short.exec(word);
+      if (reval?.length === 3)
+        return {
+          raw: reval[0],
+          publisher: reval[1],
+          extension: reval[2],
+        };
+    },
+    long: (word: string) => {
+      const reval = splitRegexp.long.exec(word);
+      if (reval?.length === 4)
+        return {
+          raw: reval[0],
+          publisher: reval[1],
+          extension: reval[2],
+          key: reval[3],
+        };
+      return undefined;
+    },
+  };
 
-    const hsp3root = await this.methods.hsp3dir();
-    if (!hsp3root) return;
+  /**
+   * 特殊文字置き換え
+   * 今回のは、keyは完全一致になるため、大文字小文字の違いに注意してください。
+   */
+  replace(word: string): string {
+    return (
+      word.replace(
+        replaceRegexp,
+        (body, key: string) => this.sc.get(key) ?? body
+      ) ?? word
+    );
+  }
 
-    const list = mycfg.get("override.list") as string[] | undefined;
-    if (!list) {
-      window.showErrorMessage('No setting in "toolset-hsp3.override.list".');
-      return;
+  listingConfg(): SettingStruct {
+    let reload = false;
+    const settings: Setting[] = [];
+
+    const list = this.cfg.get("override.list") as string[] | undefined;
+    if (!list) return { settings, reload };
+
+    for (const elm of list) {
+      const word = this.split.long(elm);
+      if (!word) continue;
+      settings.push({
+        report: `config:[${elm}]`,
+        publisher: word.publisher,
+        section: word.extension,
+        key: word.key,
+        value: ["%HSP3_ROOT%"],
+      });
     }
 
-    let reloadWindow = false;
+    return { settings, reload };
+  }
 
-    for (const item of list) {
-      if (item.length === 0) continue;
-      const words = this.split(item);
-      if (words) {
-        if (words.extension === "toolset-hsp3") continue; // 自分自身を対象にしない。
+  listingPackages(): SettingStruct {
+    let reload = false;
+    const settings: Setting[] = [];
 
-        const packageKind = this.packageKind(words);
-        if (packageKind?.antiOverride === true) continue;
-        if (packageKind?.reloadWindow === true && reloadWindow === false)
-          reloadWindow = true;
-
-        const extcfg = workspace.getConfiguration(words.extension);
-        if (!extcfg.has(words.key)) {
-          window.showWarningMessage(
-            `There is no setting "${words.raw}". Override was skipped.`
-          );
+    const v1 = (data: { id: string; json: TypedContributes }) => {
+      if (!data.json.settings) return;
+      if (data.json.reloadWindow === true) reload = true;
+      for (const elm of data.json.settings) {
+        if (elm.platform && elm.platform !== os.platform()) continue;
+        const keys = this.split.section_key(elm.id);
+        if (!keys) {
+          this.logWrite(`${data.id}.settings.${elm.id} is wrong.`);
           continue;
         }
 
-        try {
-          await extcfg.update(words.key, hsp3root, scope);
-        } catch (error) {
-          window.showErrorMessage(
-            `Error : toolset-hsp3 other extension config override is failure. [${
-              (error as Error).message
-            }]`
-          );
+        const word = this.split.publisher(data.id);
+
+        settings.push({
+          report: `extension:[${elm.id}, ${elm.value}]`,
+          publisher: word?.publisher ?? "undefined",
+          section: keys.section,
+          key: keys.key,
+          value: typeof elm.value === "string" ? [elm.value] : elm.value,
+          platform: elm.platform,
+        });
+      }
+    };
+
+    const jsons = extensions.all
+      .map((elm) => ({
+        id: elm.id,
+        json: elm.packageJSON,
+      }))
+      .filter((elm) => elm.json["toolset-hsp3"]);
+
+    for (const elm of jsons) {
+      // 検証
+      const result = zContributes.safeParse(elm.json["toolset-hsp3"]);
+      if (result.success) {
+        const configuration = result.data;
+        // 有効確認
+        if (configuration.enable === false) continue;
+        // バージョン確認
+        if (semver.valid(configuration.version)) {
+          if (semver.satisfies(configuration.version, "1.x"))
+            v1({ id: elm.id, json: elm.json["toolset-hsp3"] });
         }
+      } else {
+        this.logWrite(
+          `error zod parse. [${elm.id}] : [${result.error.message}]`
+        );
       }
     }
 
-    if (
-      mycfg.get("override.applyChangesImmediatelyInReloadWindow") &&
-      prevent === false
-    )
-      await commands.executeCommand("workbench.action.reloadWindow");
-    else if (prevent === false && reloadWindow === true) {
-      window.showWarningMessage(
-        "Some extensions require the window to be reloaded. Due to the current configuration, window reloading was not performed automatically. Note that some extensions will not work as expected if window reloading is not performed."
-      );
+    return { settings, reload };
+  }
+
+  listing(): SettingStruct {
+    const ignores =
+      (this.cfg.get("override.ignores") as string[] | undefined) ?? [];
+
+    let reload = false;
+    let settings: Setting[] = [];
+
+    try {
+      const reval1 = this.listingConfg();
+      const reval2 = this.listingPackages();
+
+      if (reval1.reload || reval2.reload) reload = true;
+
+      settings = reval1.settings
+        .concat(reval2.settings)
+        .filter(
+          (val) =>
+            !micromatch.isMatch(
+              [val.publisher, val.section, val.key].join("."),
+              ignores
+            )
+        );
+    } catch (error) {
+      if (error instanceof Error) this.logWrite(error.message);
+      console.error(error);
     }
+
+    return {
+      settings,
+      reload,
+    };
+  }
+
+  async override(unlockReload: boolean = true) {
+    if (!this.cfg.get("override.enable")) return;
+    if (!this.hsp3root) return;
+
+    // リストはメモする。
+    if (!this.struct) this.struct = this.listing();
+    const struct = this.struct;
+    const platform = os.platform();
+
+    const promises = [];
+
+    // 設定を上書きする。
+    for (const elm of struct.settings) {
+      if (elm.platform && elm.platform !== platform) continue;
+
+      const cfg = workspace.getConfiguration(elm.section);
+      if (!cfg.has(elm.key)) {
+        window.showWarningMessage(
+          `There is no setting "${elm.report}". Override was skipped.`
+        );
+        continue;
+      }
+      const value = path.join(...elm.value.map((word) => this.replace(word)));
+
+      const write = async (item: Setting, value: string) => {
+        if (cfg.inspect(item.key)?.globalValue !== value)
+          await cfg.update(item.key, value, true).then(undefined, (error) => {
+            console.error(error);
+            window.showErrorMessage(
+              `Error : toolset-hsp3 other extension config override is failure. [${
+                (error as Error).message
+              }]`
+            );
+          });
+      };
+      promises.push(write(elm, value));
+    }
+
+    await Promise.all(promises);
+
+    // 書き換えた後、ウィンドウの再読み込みが必要なら再読み込みする。
+    if (
+      unlockReload &&
+      struct.reload &&
+      this.cfg.get("override.applyChangesImmediatelyInReloadWindow")
+    )
+      commands
+        .executeCommand("workbench.action.reloadWindow")
+        .then(undefined, (error) => {
+          console.log(error);
+        });
   }
 }

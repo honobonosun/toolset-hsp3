@@ -1,23 +1,35 @@
 メモ
 
-- パッケージマネージャーはnpmです。
-- コードフォーマッタはprettierです。
+- パッケージマネージャーは npm です。
+- コードフォーマッタは prettier です。
 - 拡張機能はサーバー側で動作します。
-- WSLに対応しています。
-  - クロスプラットフォーム対応ですが、node_modulesがネイティブバイナリを含むのに留意してください。
-  - プラットフォームごとにcloneしてnpm installしてください。
+- WSL に対応しています。
+  - クロスプラットフォーム対応ですが、node_modules がネイティブバイナリを含むのに留意してください。
+  - プラットフォームごとに clone して npm install してください。
 
 # 他の拡張機能の設定上書き機能について
 
-override機能を実装しました。この機能は、"toolset-hsp3.override.list"に登録した設定IDに対して、現在選択されているhsp3rootの値で上書きします。
-上書き保存なので、以前の設定内容は消えてしまいます。以前の環境に戻せるように、事前に"toolset-hsp3.globs"へ登録してください。
+toolset-hsp3の公開APIに対応していない拡張機能へ現在のhsp3rootの値を適用させる「設定上書き機能」を提供するOverrideモジュールを実装しました。
 
-override機能は、"toolset-hsp3.override.enable"をtrueに設定する事で有効化されます。
-設定を上書きするタイミングは、'toolset-hsp3.override"コマンド実行時、もしくは、"toolset-hsp3.override.applyChangesImmediately"がtrueの状態で、hsp3rootを変更した時、toolset-hsp3拡張機能が起動した時になります。
+このモジュールは、拡張機能のpackage.jsonに静的もしくは、"toolset-hsp3.override.list"のリストを使用して対象の設定IDを現在のhsp3rootに上書きする二通りの方法で提供されます。
 
-上書きの際、"toolset-hsp3.override.applyChangesImmediatelyInReloadWindow"がtrueな場合、VSCodeのウィンドウを再読み込みして、全ての拡張機能を再起動します。
+## 拡張機能側からOverride機能を使用する
 
-"toolset-hsp3.override.scope"で、設定の上書き保存先を設定できます。falseでワークスペースに、trueでグローバルに、nullでワークスペースフォルダーもしくは、ワークスペースに上書き保存されます。
+拡張機能の開発者は、toolset-hsp3のOverride機能を自身のpackage.jsonに設定して使用する事ができます。
 
-_既定値で悩んでいます。できるだけプロジェクトに近い場所に保存するのであれば、nullがよいです。しかし、プロジェクトの設定を他者や他のマシンと共有している場合、望ましくありません。hsp3rootの値はマシン依存であるためです。次点として、ユーザー設定のtrueが上げられます。その場合、既存の設定を上書きしてしまいます。_
-_インストールして、hsp3rootを選択したら、既存の設定を破壊していた。というシチュエーションは回避する必要があります。_
+```json
+{
+  "toolset-hsp3": {
+    "version": "1.0.0",
+    "enable": true,
+    "settings": [
+      {
+        "id": "launcher-hsp3.path.hspcmp",
+        "value": ["%HSP3_ROOT%", "hspcmp"],
+        "platform": "win32"
+      }
+    ],
+    "reloadWindow": false
+  }
+}
+```

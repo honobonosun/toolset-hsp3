@@ -18,6 +18,8 @@ Once you install this extension, your VSCode will be able to find HSP3, even if 
 ## Requirements
 
 * Installed HSP3.5 (and above) for windows on your PC.
+* (Option) And Installed OpenHSP for WSL.
+* Or Installed OpenHSP for Ubuntu on your PC.
 
 ## Extension Settings
 
