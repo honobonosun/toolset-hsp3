@@ -2,6 +2,7 @@ import {
   Disposable,
   ExtensionContext,
   ExtensionKind,
+  ExtensionMode,
   commands,
   extensions,
   window,
@@ -14,6 +15,15 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
+
+const zExList = z.object({
+  publisher: z.string(),
+  id: z.string(),
+  value: z.union([z.string(), z.array(z.string())]),
+  platform: z.optional(z.string()),
+});
+
+type TypedExList = z.infer<typeof zExList>;
 
 const zContributes = z.object({
   version: z.string(),
@@ -164,10 +174,9 @@ export class Override implements Disposable {
     let reload = false;
     const settings: Setting[] = [];
 
-    const list = this.cfg.get("override.list") as string[] | undefined;
-    if (!list) return { settings, reload };
-
-    for (const elm of list) {
+    const list1 = this.cfg.get("override.list") as string[] | undefined;
+    if (!list1) return { settings, reload };
+    for (const elm of list1) {
       const word = this.split.long(elm);
       if (!word) continue;
       settings.push({
@@ -178,6 +187,23 @@ export class Override implements Disposable {
         value: ["%HSP3_ROOT%"],
       });
     }
+
+    const list2 = this.cfg.get("override.exlist") as TypedExList[] | undefined;
+    const items = z.array(zExList).safeParse(list2);
+    if (items.success)
+      for (const item of items.data) {
+        const word = this.split.section_key(item.id);
+        if (!word) continue;
+        settings.push({
+          report: `config:[${item.publisher}.${item.id}]`,
+          publisher: item.publisher,
+          section: word.section,
+          key: word.key,
+          value: typeof item.value === "string" ? [item.value] : item.value,
+          platform: item.platform,
+        });
+      }
+    else this.logWrite(items.error.message);
 
     return { settings, reload };
   }
@@ -200,7 +226,7 @@ export class Override implements Disposable {
         const word = this.split.publisher(data.id);
 
         settings.push({
-          report: `extension:[${elm.id}, ${elm.value}]`,
+          report: `extension:[${word?.publisher ?? "undefined"}.${elm.id}]`,
           publisher: word?.publisher ?? "undefined",
           section: keys.section,
           key: keys.key,
@@ -242,6 +268,9 @@ export class Override implements Disposable {
   listing(): SettingStruct {
     const ignores =
       (this.cfg.get("override.ignores") as string[] | undefined) ?? [];
+    if (this.context.extensionMode === ExtensionMode.Production)
+      // リリース版ではglobを書き換えられないように除外リストへ追加する。
+      ignores.push("honobonosun\\.toolset-hsp3\\.globs");
 
     let reload = false;
     let settings: Setting[] = [];
@@ -261,6 +290,7 @@ export class Override implements Disposable {
               ignores
             )
         );
+      console.log(settings);
     } catch (error) {
       if (error instanceof Error) this.logWrite(error.message);
       console.error(error);

@@ -50,21 +50,50 @@
         },
         "toolset-hsp3.override.applyChangesImmediately": {
           "type": "boolean",
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "Overrides the settings of other extensions immediately after switching hsp3root."
         },
         "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
           "type": "boolean",
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "After you have overridden the settings, reload the window. (executeCommand 'workbench.action.reloadWindow')"
         },
         "toolset-hsp3.override.list": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": [
-            "hoge.fuga"
-          ],
-          "scope": "machine"
+          "default": [],
+          "scope": "machine",
+          "examples": [
+            [
+              "vain0x.hsp3-debug-window-adapter.hsp3-root"
+            ],
+            [
+              "vain0x.hsp3-debug-window-adapter.hsp3-root",
+              "vain0x.hsp3-analyzer-mini.hsp3-root"
+            ]
+          ]
+        },
+        "toolset-hsp3.override.exlist": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "examples": [
+            [
+              {
+                "publisher": "honobonosun",
+                "id": "language-hsp3.helpman.path.local",
+                "value": [
+                  "%HSP3_ROOT%",
+                  "hsphelp",
+                  "helpman.exe"
+                ],
+                "platform": "win32"
+              }
+            ]
+          ]
         },
         "toolset-hsp3.override.ignores": {
           "type": "array",
@@ -72,7 +101,7 @@
             "type": "string"
           },
           "default": [
-            "toolset-hsp3\\.*"
+            "honobonosun\\.language-hsp3\\.helpman\\.path\\.local"
           ],
           "scope": "machine"
         },
