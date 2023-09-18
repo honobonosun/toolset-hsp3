@@ -17,8 +17,9 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "vscode": "^1.71.0"
+    "vscode": "^1.73.0"
   },
+  "l10n": "./l10n",
   "displayName": "toolset-hsp3",
   "categories": [
     "Programming Languages"
@@ -73,9 +74,10 @@
               "vain0x.hsp3-debug-window-adapter.hsp3-root",
               "vain0x.hsp3-analyzer-mini.hsp3-root"
             ]
-          ]
+          ],
+          "markdownDescription": "hsp3rootで上書きする設定IDを設定してください。string[]型です。そのため、設定IDを複数設定できます。設定する値をより詳細に制御するには、\"toolset-hsp3.override.listEx\"で設定できます。"
         },
-        "toolset-hsp3.override.exlist": {
+        "toolset-hsp3.override.listEx": {
           "type": "array",
           "items": {
             "type": "object"
@@ -158,7 +160,9 @@
     "@types/is-glob": "^4.0.2",
     "@types/micromatch": "^4.0.2",
     "@types/semver": "^7.5.0",
-    "@types/vscode": "^1.71.0",
+    "@types/vscode": "^1.73.0",
+    "@vscode/l10n": "^0.0.16",
+    "@vscode/l10n-dev": "^0.0.29",
     "esbuild": "^0.15.10",
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",

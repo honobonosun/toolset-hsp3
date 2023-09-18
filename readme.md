@@ -4,7 +4,7 @@ An extension to automate hsp3root path configuration.
 
 ## Features
 
-This extension provides three functions.
+This extension provides functions.
 
 (1) Search for installed HSP3 using the node-glob pattern.
 
@@ -12,14 +12,17 @@ This extension provides three functions.
 
 (3) Other extensions can get the path of the environment selected in (2) from the public API.
 
-Once you install this extension, your VSCode will be able to find HSP3, even if you are not familiar with the file system, as long as HSP3 is installed by the installer to default path.
+(4) (Option) Override the settings of other extensions.
 
+Once you install this extension, your VS Code will be able to find HSP3, even if you are not familiar with the file system, as long as HSP3 is installed by the installer to default path.
+
+VS Code拡張機能の開発者は、package.jsonに"toolset-hsp3"セクションを記述することで、静的にOverride機能を使用することができます。詳細は./dev.mdを参照してください。
 
 ## Requirements
 
-* Installed HSP3.5 (and above) for windows on your PC.
-* (Option) And Installed OpenHSP for WSL.
-* Or Installed OpenHSP for Ubuntu on your PC.
+- Installed HSP3.5 (and above) for windows on your PC.
+- (Option) And Installed OpenHSP for WSL.
+- Or Installed OpenHSP for Ubuntu on your PC.
 
 ## Extension Settings
 
@@ -32,6 +35,36 @@ Since it is an array, you can write multiple glob patterns.
 Node-glob on Windows cannot use a backslash as a path separator.
 
 You can read about other specifications in the repository.
+
+### toolset-hsp3.override.enable
+
+### toolset-hsp3.override.list
+
+このリストに記入した設定は、Override コマンドを実行する事で、現在の hsp3root に設定を上書きされます。
+
+リストは、プロバイダー名、拡張機能名、設定 ID をドットでつなげた文字列で配列に記入します。
+
+配列のため、複数の設定を上書き対象にする事ができます。
+
+```json
+{
+  "toolset-hsp3.override.list": ["provider_name.extension_name.config_id"]
+}
+```
+
+### toolset-hsp3.override.listEx
+
+```json
+{
+  "toolset-hsp3.override.listEx": [
+    {
+      "publisher": "provider_name",
+      "id": "extension_name.config_id",
+      "value": ["%HSP3_ROOT%", "hsphelp", "helpman.exe"]
+    }
+  ]
+}
+```
 
 ## License
 

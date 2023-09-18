@@ -5,6 +5,7 @@ import {
   ExtensionMode,
   commands,
   extensions,
+  l10n,
   window,
   workspace,
 } from "vscode";
@@ -16,14 +17,16 @@ import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
 
-const zExList = z.object({
+const t = l10n.t;
+
+const zListEx = z.object({
   publisher: z.string(),
   id: z.string(),
   value: z.union([z.string(), z.array(z.string())]),
   platform: z.optional(z.string()),
 });
 
-type TypedExList = z.infer<typeof zExList>;
+type TypedListEx = z.infer<typeof zListEx>;
 
 const zContributes = z.object({
   version: z.string(),
@@ -188,8 +191,8 @@ export class Override implements Disposable {
       });
     }
 
-    const list2 = this.cfg.get("override.exlist") as TypedExList[] | undefined;
-    const items = z.array(zExList).safeParse(list2);
+    const list2 = this.cfg.get("override.listEx") as TypedListEx[] | undefined;
+    const items = z.array(zListEx).safeParse(list2);
     if (items.success)
       for (const item of items.data) {
         const word = this.split.section_key(item.id);
