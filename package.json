@@ -1,9 +1,9 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "preview": true,
-  "description": "An VSCode extension to automate hsp3root path configuration.",
+  "description": "%extension.description%",
   "main": "out/extension.js",
   "readme": "./readme.md",
   "extensionKind": [
@@ -42,22 +42,43 @@
             "/hsp3*"
           ],
           "scope": "machine",
-          "markdownDescription": "[node-glob](https://www.npmjs.com/package/glob) pattern indicating the directory where HSP3 is installed."
+          "markdownDescription": "%package.description.cfg.globs%"
         },
         "toolset-hsp3.override.enable": {
           "type": "boolean",
-          "markdownDescription": "Override the extension settings in override.list with the current hsp3root.",
+          "markdownDescription": "%package.description.cfg.override.enable%",
           "scope": "machine"
+        },
+        "toolset-hsp3.override.scope": {
+          "type": "string",
+          "default": "true",
+          "markdownDescription": "%package.description.cfg.override.scope%",
+          "enum": [
+            "undefined",
+            "false",
+            "true",
+            "Global",
+            "Workspace",
+            "WorkspaceFolder"
+          ],
+          "markdownEnumDescriptions": [
+            "undefined",
+            "false",
+            "true",
+            "%package.description.cfg.override.scope.Global%",
+            "%package.description.cfg.override.scope.Workspace%",
+            "%package.description.cfg.override.scope.WorkspaceFolder%"
+          ]
         },
         "toolset-hsp3.override.applyChangesImmediately": {
           "type": "boolean",
           "scope": "machine",
-          "markdownDescription": "Overrides the settings of other extensions immediately after switching hsp3root."
+          "markdownDescription": "%package.description.cfg.override.applyChangesImmediately%"
         },
         "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
           "type": "boolean",
           "scope": "machine",
-          "markdownDescription": "After you have overridden the settings, reload the window. (executeCommand 'workbench.action.reloadWindow')"
+          "markdownDescription": "%package.description.cfg.override.applyChangesImmediatelyInReloadWindow%"
         },
         "toolset-hsp3.override.list": {
           "type": "array",
@@ -75,7 +96,7 @@
               "vain0x.hsp3-analyzer-mini.hsp3-root"
             ]
           ],
-          "markdownDescription": "hsp3rootで上書きする設定IDを設定してください。string[]型です。そのため、設定IDを複数設定できます。設定する値をより詳細に制御するには、\"toolset-hsp3.override.listEx\"で設定できます。"
+          "markdownDescription": "%package.description.cfg.override.list%"
         },
         "toolset-hsp3.override.listEx": {
           "type": "array",
@@ -92,10 +113,12 @@
                   "hsphelp",
                   "helpman.exe"
                 ],
-                "platform": "win32"
+                "platform": "win32",
+                "scope": "WorkspaceFolder"
               }
             ]
-          ]
+          ],
+          "markdownDescription": "%package.description.cfg.override.listEx%"
         },
         "toolset-hsp3.override.ignores": {
           "type": "array",
@@ -105,11 +128,13 @@
           "default": [
             "honobonosun\\.language-hsp3\\.helpman\\.path\\.local"
           ],
+          "markdownDescription": "%package.description.cfg.override.ignores%",
           "scope": "machine"
         },
         "toolset-hsp3.task.env.enable": {
           "type": "boolean",
           "default": true,
+          "markdownDescription": "%package.description.cfg.task.env.enable%",
           "scope": "machine"
         },
         "toolset-hsp3.test.path": {
@@ -122,17 +147,22 @@
     "commands": [
       {
         "command": "toolset-hsp3.select",
-        "title": "select hsp3root",
+        "title": "%package.title.cmd.select%",
+        "category": "hsp.toolset"
+      },
+      {
+        "command": "toolset-hsp3.unset",
+        "title": "%package.title.cmd.unset%",
         "category": "hsp.toolset"
       },
       {
         "command": "toolset-hsp3.open",
-        "title": "open hsp3root file manager",
+        "title": "%package.title.cmd.open%",
         "category": "hsp.toolset"
       },
       {
         "command": "toolset-hsp3.override",
-        "title": "override other extension settings",
+        "title": "%package.title.cmd.override%",
         "category": "hsp.toolset"
       },
       {
@@ -153,9 +183,12 @@
     "build": "npm run -S esbuild-base -- --sourcemap",
     "watch": "npm run -S esbuild-base -- --sourcemap --watch",
     "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
-    "test": "eslint src --ext ts && tsc --noEmit"
+    "test": "eslint src --ext ts && tsc --noEmit",
+    "genL10nFiles": "npx @vscode/l10n-dev export --outDir ./l10n ./src",
+    "make": "npx vsce package"
   },
   "devDependencies": {
+    "@types/node": "^18.15.0",
     "@types/glob": "^8.0.0",
     "@types/is-glob": "^4.0.2",
     "@types/micromatch": "^4.0.2",
@@ -163,6 +196,7 @@
     "@types/vscode": "^1.73.0",
     "@vscode/l10n": "^0.0.16",
     "@vscode/l10n-dev": "^0.0.29",
+    "@vscode/vsce": "^2.21.0",
     "esbuild": "^0.15.10",
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
@@ -190,7 +224,8 @@
         "value": [
           "%HSP3_ROOT%",
           "test"
-        ]
+        ],
+        "scope": "Global"
       }
     ],
     "reloadWindow": false

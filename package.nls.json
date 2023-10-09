@@ -1,0 +1,19 @@
+{
+  "package.title.cmd.select": "select hsp3root",
+  "package.title.cmd.unset": "unset hsp3root",
+  "package.title.cmd.open": "open hsp3root file manager",
+  "package.title.cmd.override": "override other extension settings",
+  "package.description": "An VS Code extension to automate hsp3root path configuration.",
+  "package.description.cfg.globs": "[node-glob](https://www.npmjs.com/package/glob) pattern indicating the directory where HSP3 is installed.",
+  "package.description.cfg.override.enable": "Enable the ability to overwrite extended settings with the current hsp3root.",
+  "package.description.cfg.override.applyChangesImmediately": "Overrides the settings of other extensions immediately after switching hsp3root.",
+  "package.description.cfg.override.applyChangesImmediatelyInReloadWindow": "After you have overridden the settings, reload the window. (executeCommand 'workbench.action.reloadWindow')",
+  "package.description.cfg.override.list": "List of Setting IDs to be overridden by hsp3root.",
+  "package.description.cfg.override.listEx": "Advanced configuration list to be overridden by hsp3root.",
+  "package.description.cfg.override.ignores": "A list of configuration IDs to ignore overwrites.",
+  "package.description.cfg.task.env.enable": "Overwrite the HSP3_ROOT variable in the terminal with hsp3root. (If changes are made while the terminal is running, they will not take effect until the terminal is restarted.)",
+  "package.description.cfg.override.scope": "Sets the scope to be used when overriding the \"toolset-hsp3.override.list\" setting.",
+  "package.description.cfg.override.scope.Global": "Save to user settings.",
+  "package.description.cfg.override.scope.Workspace": "Save to workspace settings.",
+  "package.description.cfg.override.scope.WorkspaceFolder": "Save the file in the directory \".vscode/settings.json\" or in the workspace settings."
+}

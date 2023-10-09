@@ -2,6 +2,7 @@ import {
   commands,
   Disposable,
   ExtensionContext,
+  l10n,
   languages,
   LanguageStatusSeverity,
   ShellExecution,
@@ -30,6 +31,7 @@ interface Provider {
   resolve(patterns: string[]): Promise<{ errors: any[]; items: Item[] }>;
 }
 
+// win32専用
 const env_hsp3root = () => {
   if (process.env.HSP3_ROOT)
     return process.env.HSP3_ROOT.split(";").map((el) =>
@@ -77,7 +79,6 @@ const provider = {
 export function activate(context: ExtensionContext) {
   //console.log("activate toolset-hsp3");
 
-  // class
   const extension = new Extension(context);
   const override = new Override(context, extension.methods);
   context.subscriptions.push(extension, override);
@@ -126,6 +127,9 @@ export function activate(context: ExtensionContext) {
     }),
     commands.registerCommand("toolset-hsp3.override", () => {
       override.override();
+    }),
+    commands.registerCommand("toolset-hsp3.unset", () => {
+      extension.select(undefined);
     })
   );
 
@@ -141,13 +145,6 @@ export function activate(context: ExtensionContext) {
 
   const cur = context.workspaceState.get("current") as Item | undefined;
   extension.select(cur);
-
-  /*
-  const cfg = workspace.getConfiguration("toolset-hsp3");
-  const cur = cfg.get("current", undefined) as Item | undefined;
-  if (cur?.name) extension.select(cur);
-  else extension.select(undefined);
-  */
 
   return extension.methods;
 }
@@ -264,11 +261,13 @@ export class Extension implements Disposable {
 
   async update() {
     if (this.current) {
+      // 言語ステータスバー 更新
       this.langstatbar.text = this.current.name;
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = this.current.path;
       this.langstatbar.severity = LanguageStatusSeverity.Information;
 
+      // ターミナル環境変数 更新
       const cfg = workspace.getConfiguration(EXTENSION_NAME);
       if (cfg.get("task.env.enable") === true) {
         this.context.environmentVariableCollection.clear();
@@ -276,7 +275,7 @@ export class Extension implements Disposable {
           "HSP3_ROOT",
           dirname(this.current.path)
         );
-        /*
+        /*  // オプション：PATH変数にhsp3rootを通す
         this.context.environmentVariableCollection.append(
           "PATH",
           `${platform() === "win32" ? ";" : ":"}${dirname(this.current.path)}`
@@ -284,11 +283,13 @@ export class Extension implements Disposable {
         */
       }
     } else {
+      // 言語ステータスバー 更新
       this.langstatbar.text = "none";
       if (this.langstatbar.command)
         this.langstatbar.command.tooltip = undefined;
       this.langstatbar.severity = LanguageStatusSeverity.Warning;
 
+      // ターミナル環境変数 更新
       this.context.environmentVariableCollection.clear();
     }
   }
@@ -299,35 +300,35 @@ export class Extension implements Disposable {
     // 拡張機能のストレージに保存する
     this.context.workspaceState.update("current", item);
 
-    // settings.jsonに保存する
-    /*
-    const cfg = workspace.getConfiguration("toolset-hsp3");
-    cfg.update("current", item, true);
-    */
-
     // リスナーへ通知
     this.registry.listener.forEach((el) => el(this.current));
+
+    // 画面表示を反映させる
     this.update();
   }
 
   async showSelect() {
     const fn = async () => {
       const description = (path: string) => {
-        for (const el of hsp3roots.map((el) =>
-          normalize(el).replace(/^\//, "C:\\")
-        ))
-          if (el === dirname(path)) return "$env:HSP3_ROOT";
+        if (platform() === "win32")
+          for (const el of hsp3roots.map((el) =>
+            normalize(el).replace(/^\//, "C:\\")
+          ))
+            if (el === dirname(path)) return "$env:HSP3_ROOT";
         return undefined;
       };
 
-      const items = await this.listing();
-      if (!items) return [];
-      return items.map((el) => ({
-        label: el.name,
-        detail: el.path,
-        item: el,
-        description: description(el.path),
-      }));
+      const list = await this.listing();
+      if (!list) return [];
+      else
+        return Array.from(
+          new Map(list.map((elm) => [elm.path, elm])).values()
+        ).map((el) => ({
+          label: el.name,
+          detail: el.path,
+          item: el,
+          description: description(el.path),
+        }));
     };
     const sel = await window.showQuickPick(fn());
     if (sel) this.select(sel.item);

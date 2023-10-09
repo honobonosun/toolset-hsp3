@@ -1,4 +1,5 @@
 import {
+  ConfigurationTarget,
   Disposable,
   ExtensionContext,
   ExtensionKind,
@@ -17,16 +18,24 @@ import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
 
-const t = l10n.t;
+const zScope = z.enum([
+  "undefined",
+  "false",
+  "true",
+  "Global",
+  "Workspace",
+  "WorkspaceFolder",
+]);
+type TypedScope = z.infer<typeof zScope>;
 
-const zListEx = z.object({
+const zListExElm = z.object({
   publisher: z.string(),
   id: z.string(),
   value: z.union([z.string(), z.array(z.string())]),
   platform: z.optional(z.string()),
+  scope: zScope,
 });
-
-type TypedListEx = z.infer<typeof zListEx>;
+type TypedListExElm = z.infer<typeof zListExElm>;
 
 const zContributes = z.object({
   version: z.string(),
@@ -37,6 +46,7 @@ const zContributes = z.object({
         id: z.string(),
         value: z.union([z.string(), z.array(z.string())]),
         platform: z.optional(z.string()),
+        scope: zScope,
       })
     )
   ),
@@ -52,12 +62,34 @@ interface Setting {
   key: string;
   value: string[];
   platform?: string;
+  scope: TypedScope;
 }
 
 interface SettingStruct {
   reload: boolean;
   settings: Setting[];
 }
+
+const cfgTarget = (
+  word: TypedScope
+): ConfigurationTarget | boolean | null | undefined => {
+  switch (word) {
+    case "undefined":
+      return undefined;
+    case "false":
+      return false;
+    case "true":
+      return true;
+    case "Global":
+      return ConfigurationTarget.Global;
+    case "Workspace":
+      return ConfigurationTarget.Workspace;
+    case "WorkspaceFolder":
+      return ConfigurationTarget.WorkspaceFolder;
+    default:
+      return true;
+  }
+};
 
 const splitRegexp = {
   long: /(.*?)(?:\.)(.*?)(?:\.)(.*)/,
@@ -86,6 +118,7 @@ export class Override implements Disposable {
         if (this.cfg.get("override.applyChangesImmediately")) {
           if (
             e.affectsConfiguration("toolset-hsp3.override.list") ||
+            e.affectsConfiguration("toolset-hsp3.override.listEx") ||
             e.affectsConfiguration("toolset-hsp3.override.ignores")
           ) {
             this.struct = undefined;
@@ -176,6 +209,7 @@ export class Override implements Disposable {
   listingConfg(): SettingStruct {
     let reload = false;
     const settings: Setting[] = [];
+    const scope = this.cfg.get<TypedScope>("override.scope") ?? "true";
 
     const list1 = this.cfg.get("override.list") as string[] | undefined;
     if (!list1) return { settings, reload };
@@ -188,11 +222,12 @@ export class Override implements Disposable {
         section: word.extension,
         key: word.key,
         value: ["%HSP3_ROOT%"],
+        scope,
       });
     }
 
-    const list2 = this.cfg.get("override.listEx") as TypedListEx[] | undefined;
-    const items = z.array(zListEx).safeParse(list2);
+    const list2 = this.cfg.get<TypedListExElm[]>("override.listEx");
+    const items = z.array(zListExElm).safeParse(list2);
     if (items.success)
       for (const item of items.data) {
         const word = this.split.section_key(item.id);
@@ -204,9 +239,19 @@ export class Override implements Disposable {
           key: word.key,
           value: typeof item.value === "string" ? [item.value] : item.value,
           platform: item.platform,
+          scope: item.scope,
         });
       }
-    else this.logWrite(items.error.message);
+    else {
+      items.error.issues.forEach((item) =>
+        window.showWarningMessage(
+          l10n.t('"toolset-hsp3.override.listEx.{path}" is {message}', {
+            path: item.path.join("."),
+            message: item.message,
+          })
+        )
+      );
+    }
 
     return { settings, reload };
   }
@@ -235,6 +280,7 @@ export class Override implements Disposable {
           key: keys.key,
           value: typeof elm.value === "string" ? [elm.value] : elm.value,
           platform: elm.platform,
+          scope: elm.scope,
         });
       }
     };
@@ -293,7 +339,6 @@ export class Override implements Disposable {
               ignores
             )
         );
-      console.log(settings);
     } catch (error) {
       if (error instanceof Error) this.logWrite(error.message);
       console.error(error);
@@ -320,10 +365,15 @@ export class Override implements Disposable {
     for (const elm of struct.settings) {
       if (elm.platform && elm.platform !== platform) continue;
 
-      const cfg = workspace.getConfiguration(elm.section);
+      const cfg = workspace.getConfiguration(
+        elm.section,
+        window.activeTextEditor?.document
+      );
       if (!cfg.has(elm.key)) {
         window.showWarningMessage(
-          `There is no setting "${elm.report}". Override was skipped.`
+          l10n.t('There is no setting "{report}". Override was skipped.', {
+            report: elm.report,
+          })
         );
         continue;
       }
@@ -331,14 +381,21 @@ export class Override implements Disposable {
 
       const write = async (item: Setting, value: string) => {
         if (cfg.inspect(item.key)?.globalValue !== value)
-          await cfg.update(item.key, value, true).then(undefined, (error) => {
-            console.error(error);
-            window.showErrorMessage(
-              `Error : toolset-hsp3 other extension config override is failure. [${
-                (error as Error).message
-              }]`
-            );
-          });
+          await cfg
+            .update(item.key, value, cfgTarget(item.scope))
+            .then(undefined, (error) => {
+              console.error(error);
+              window.showErrorMessage(
+                l10n.t(
+                  "Failed to override the settings of other extensions. [{message}]",
+                  {
+                    message: `"${[item.section, item.key].join(".")}" : "${
+                      (error as Error).message
+                    }"`,
+                  }
+                )
+              );
+            });
       };
       promises.push(write(elm, value));
     }

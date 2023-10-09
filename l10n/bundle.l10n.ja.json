@@ -1,0 +1,4 @@
+{
+  "There is no setting \"{report}\". Override was skipped.": "設定項目 \"{report}\" がないため、上書きは無視されました。",
+  "Failed to override the settings of other extensions. [{message}]": "他の拡張機能の設定をオーバーライドできませんでした。 [{message}]"
+}
