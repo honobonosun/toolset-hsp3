@@ -4,5 +4,8 @@
   "editor.formatOnType": true,
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "i18n-ally.localesPaths": ["./", "./l10n"],
+  "i18n-ally.pathMatcher": "bundle.l10n.{locale}.json",
+  "i18n-ally.keystyle": "nested"
 }

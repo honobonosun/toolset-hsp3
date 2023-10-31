@@ -10,13 +10,13 @@ import {
   window,
   workspace,
 } from "vscode";
-import { Extension } from "./extension";
 import { ZodError, z } from "zod";
 import { EXTENSION_NAME } from "./constant";
 import * as path from "node:path";
 import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
+import { Agent } from "./agent";
 
 const zScope = z.enum([
   "undefined",
@@ -108,7 +108,7 @@ export class Override implements Disposable {
 
   constructor(
     private context: ExtensionContext,
-    private methods: Extension["methods"]
+    private methods: Agent["method"]
   ) {
     this.subscriptions.push(
       workspace.onDidChangeConfiguration((e) => {
