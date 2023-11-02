@@ -5,19 +5,33 @@ import {
   Task,
   TaskScope,
   commands,
+  env,
   tasks,
   window,
 } from "vscode";
-import { Agent, AgentProvider, resolutionResult } from "./agent";
+import { Agent } from "./agent";
 import { Override } from "./override";
 import { provider } from "./provider";
 import { platform } from "node:os";
 
-export function activate(context: ExtensionContext) {
+import { I18n } from "i18n";
+import { join } from "node:path";
+
+export async function activate(context: ExtensionContext) {
+  const i18n = new I18n({
+    directory: join(context.extensionPath, "locales"),
+    defaultLocale: env.language,
+  });
+  console.log(i18n.getCatalog());
+  i18n.setLocale(env.language);
+  console.log(i18n.getLocale());
+  const t = i18n.__mf;
+  console.log(t("hello"));
+
   const extension = new Extension(context);
   context.subscriptions.push(extension);
   extension.agent.method.registryToolsetProvider(provider);
-  extension.agent.load();
+  await extension.agent.load();
   return extension.method;
 }
 export function deactivate() {}

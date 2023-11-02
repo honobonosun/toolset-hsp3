@@ -8,7 +8,6 @@ import {
   workspace,
   LanguageStatusSeverity,
   l10n,
-  QuickPickItem,
 } from "vscode";
 import { promisify } from "node:util";
 import { platform } from "node:os";
@@ -61,20 +60,16 @@ const get_hsp3roots = () => {
 const hsp3roots: string[] = get_hsp3roots();
 
 // glob対応版
-const glob_hsp3roots: string[] = hsp3roots.map((elm) => {
+const hsp3roots_glob: string[] = hsp3roots.map((elm) => {
   if (platform() === "win32")
     return elm.replace(/^[cC]:\\/, "/").replace(/\\/g, "/");
   else return elm;
 });
 
-class AgentItemManager {}
-class AgentListener {}
-class AgentProviderManager {}
-
 export class Agent implements Disposable {
   private langStatBar: LangStatBar;
-  private listener = new Map<Symbol, ListenerCallback>();
-  private providers = new Map<Symbol, AgentProvider>();
+  private listener = new Map<symbol, ListenerCallback>();
+  private providers = new Map<symbol, AgentProvider>();
   private current: AgentItem | undefined;
   private outcha: import("vscode").LogOutputChannel;
   private cfg: import("vscode").WorkspaceConfiguration;
@@ -107,7 +102,11 @@ export class Agent implements Disposable {
         );
       }),
       commands.registerCommand("toolset-hsp3.hsp3root", () => this.hsp3root),
-      commands.registerCommand("toolset-hsp3.override", () => {})
+      commands.registerCommand("toolset-hsp3.override", () => {}),
+      commands.registerCommand(
+        "toolset-hsp3.current.toString",
+        () => this.hsp3root
+      )
     );
   }
 
@@ -204,7 +203,7 @@ export class Agent implements Disposable {
 
     this.langStatBar.busy = true;
     try {
-      let errors: any[] = [];
+      let errors: unknown[] = [];
       let paths: string[] = [];
 
       // globパターンを求める
@@ -293,7 +292,10 @@ export class Agent implements Disposable {
       const list = await this.listing();
       if (!list) return [];
 
-      const description = (longname: string) => undefined;
+      const description = (longname: string) => {
+        if (hsp3roots_glob.indexOf(longname) > 0) return "HSP3_ROOT";
+        else return undefined;
+      };
 
       return Array.from(
         new Map(list.map((elm) => [elm.path, elm])).values()
@@ -305,7 +307,7 @@ export class Agent implements Disposable {
       }));
     };
     const selectItem = await window.showQuickPick(fn());
-    this.select(selectItem?.item);
+    if (selectItem) this.select(selectItem?.item);
   }
 
   get hsp3root() {
