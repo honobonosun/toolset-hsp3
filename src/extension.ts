@@ -17,7 +17,11 @@ import { platform } from "node:os";
 import { I18n } from "i18n";
 import { join } from "node:path";
 
+import i18next from "i18next";
+import jaBook from "../locales/ja.json";
+
 export async function activate(context: ExtensionContext) {
+  // i18n-node
   const i18n = new I18n({
     directory: join(context.extensionPath, "locales"),
     defaultLocale: env.language,
@@ -27,6 +31,24 @@ export async function activate(context: ExtensionContext) {
   console.log(i18n.getLocale());
   const t = i18n.__mf;
   console.log(t("hello"));
+
+  // i18next
+  i18next
+    .init({
+      lng: "ja",
+      debug: true,
+      resources: {
+        ja: {
+          translation: {
+            key: "こんにちは！",
+          },
+        },
+      },
+    })
+    .then((val) => {
+      console.log(val);
+      console.log(i18next.t("key"));
+    });
 
   const extension = new Extension(context);
   context.subscriptions.push(extension);
