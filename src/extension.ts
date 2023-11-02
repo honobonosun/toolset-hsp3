@@ -33,15 +33,15 @@ export async function activate(context: ExtensionContext) {
   console.log(t("hello"));
 
   // i18next
+  console.log(jaBook);
   i18next
     .init({
       lng: "ja",
       debug: true,
+      defaultNS: "ns",
       resources: {
         ja: {
-          translation: {
-            key: "こんにちは！",
-          },
+          ns: jaBook,
         },
       },
     })
