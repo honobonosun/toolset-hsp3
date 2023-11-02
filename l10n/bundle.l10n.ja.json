@@ -5,5 +5,8 @@
   "The value of toolset-hsp3.globs is not valid.": "toolset-hsp3.globs の値が無効です。",
   "\"toolset-hsp3.override.listEx.{path}\" is {message}": "\"toolset-hsp3.override.listEx.{path}\" is {message}",
   "There is no setting \"{report}\". Override was skipped.": "設定項目 \"{report}\" がないため、上書きは無視されました。",
-  "Failed to override the settings of other extensions. [{message}]": "他の拡張機能の設定をオーバーライドできませんでした。 [{message}]"
+  "Failed to override the settings of other extensions. [{message}]": "他の拡張機能の設定をオーバーライドできませんでした。 [{message}]",
+  "extension": {
+    "description": ""
+  }
 }
