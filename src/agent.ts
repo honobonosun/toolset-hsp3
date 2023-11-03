@@ -7,7 +7,6 @@ import {
   commands,
   workspace,
   LanguageStatusSeverity,
-  l10n,
 } from "vscode";
 import { promisify } from "node:util";
 import { platform } from "node:os";
@@ -16,6 +15,7 @@ import glob = require("glob");
 const pglob = promisify(glob);
 import isGlob = require("is-glob");
 import path = require("node:path");
+import { i18n } from "./i18n";
 
 enum logStatus {
   "info",
@@ -71,7 +71,7 @@ export class Agent implements Disposable {
   private listener = new Map<symbol, ListenerCallback>();
   private providers = new Map<symbol, AgentProvider>();
   private current: AgentItem | undefined;
-  private outcha: import("vscode").LogOutputChannel;
+  private outcha: import("vscode").OutputChannel;
   private cfg: import("vscode").WorkspaceConfiguration;
   private cache: AgentItem[] | undefined;
 
@@ -81,9 +81,7 @@ export class Agent implements Disposable {
     // UI
     this.langStatBar = new LangStatBar();
 
-    this.outcha = window.createOutputChannel("toolset-hsp3 agent", {
-      log: true,
-    });
+    this.outcha = window.createOutputChannel("toolset-hsp3 agent");
 
     context.subscriptions.push(
       // config
@@ -97,9 +95,7 @@ export class Agent implements Disposable {
       commands.registerCommand("toolset-hsp3.unset", () => {
         this.select(undefined);
         this.resetCache();
-        window.showInformationMessage(
-          l10n.t("hsp3root setting is unselected.")
-        );
+        window.showInformationMessage(i18n.t("agent.hsp3root-unselected"));
       }),
       commands.registerCommand("toolset-hsp3.hsp3root", () => this.hsp3root),
       commands.registerCommand("toolset-hsp3.override", () => {}),
@@ -118,6 +114,7 @@ export class Agent implements Disposable {
 
   private writeLog(status: logStatus, str: string) {
     switch (status) {
+      /*
       case logStatus.info:
         this.outcha.info(str);
         break;
@@ -127,6 +124,7 @@ export class Agent implements Disposable {
       case logStatus.error:
         this.outcha.error(str);
         break;
+      */
       default:
         this.outcha.appendLine(str);
         break;
@@ -172,7 +170,7 @@ export class Agent implements Disposable {
         if (reason instanceof Error)
           this.writeLog(
             logStatus.error,
-            l10n.t('Resolution Method Call Error [{name}] "{message}"', {
+            i18n.t("agent.resolution-method-call-error", {
               name,
               memessage: reason.message,
             })
@@ -186,11 +184,7 @@ export class Agent implements Disposable {
           if (reason instanceof Error)
             this.writeLog(
               logStatus.error,
-              l10n.t('Resolution Error [{name}] "{message}"', {
-                name,
-                message: reason.message,
-              })
-              /*`Resolution Error [${name}] "${reason.message}"`*/
+              `Resolution Error [${name}] "${reason.message}"`
             );
           else console.error("Resolution Error", name, reason);
       }
@@ -213,7 +207,7 @@ export class Agent implements Disposable {
       if (!globPatterns) {
         this.writeLog(
           logStatus.error,
-          l10n.t("The value of toolset-hsp3.globs is not valid.")
+          "The value of toolset-hsp3.globs is not valid."
         );
         return;
       }

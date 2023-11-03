@@ -6,6 +6,7 @@ import { AgentItem, AgentProvider, resolutionResult } from "./agent";
 const hsp3clVersion = (
   path: string
 ): Promise<{ path: string; version: string } | { error: any }> =>
+  // eslint-disable-next-line no-async-promise-executor
   new Promise(async (resolve, reject) => {
     let cmd = path;
     if ((await stat(path)).isDirectory()) {
@@ -26,8 +27,8 @@ const hsp3clVersion = (
 export const provider: AgentProvider = {
   name: "hsp3cl",
   resolve: async function (patterns: string[]) {
-    let errors = [] as any[];
-    let items = [] as AgentItem[];
+    const errors = [] as unknown[];
+    const items = [] as AgentItem[];
 
     for (const el of patterns) {
       const result = await hsp3clVersion(el);

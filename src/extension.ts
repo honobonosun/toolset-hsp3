@@ -13,42 +13,21 @@ import { Agent } from "./agent";
 import { Override } from "./override";
 import { provider } from "./provider";
 import { platform } from "node:os";
+import { i18n, init } from "./i18n";
 
+/*
 import { I18n } from "i18n";
 import { join } from "node:path";
 
-import i18next from "i18next";
-import jaBook from "../locales/ja.json";
+import i18next, { i18n } from "i18next";
+import jaLocales from "../locales/ja.json";
+import enLocales from "../locales/en.json";
+*/
 
 export async function activate(context: ExtensionContext) {
-  // i18n-node
-  const i18n = new I18n({
-    directory: join(context.extensionPath, "locales"),
-    defaultLocale: env.language,
-  });
-  console.log(i18n.getCatalog());
-  i18n.setLocale(env.language);
-  console.log(i18n.getLocale());
-  const t = i18n.__mf;
-  console.log(t("hello"));
-
-  // i18next
-  console.log(jaBook);
-  i18next
-    .init({
-      lng: "ja",
-      debug: true,
-      defaultNS: "ns",
-      resources: {
-        ja: {
-          ns: jaBook,
-        },
-      },
-    })
-    .then((val) => {
-      console.log(val);
-      console.log(i18next.t("key"));
-    });
+  await init(env.language);
+  //await i18n.changeLanguage(env.language);
+  console.log(i18n.t("activation", { name: "toolset-hsp3" }));
 
   const extension = new Extension(context);
   context.subscriptions.push(extension);
@@ -69,7 +48,7 @@ class Extension implements Disposable {
       commands.registerCommand("toolset-hsp3.open", () => {
         const hsp3dir = this.agent.method.hsp3dir();
         if (hsp3dir) this.open(hsp3dir);
-        else window.showErrorMessage("hsp3root is not selected.");
+        else window.showErrorMessage(i18n.t("hsp3root-no-selected"));
       })
     );
   }

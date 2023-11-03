@@ -6,7 +6,6 @@ import {
   ExtensionMode,
   commands,
   extensions,
-  l10n,
   window,
   workspace,
 } from "vscode";
@@ -17,6 +16,12 @@ import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
 import { Agent } from "./agent";
+
+const l10n = {
+  t: (str: string, object: object): string => {
+    return str;
+  },
+};
 
 const zScope = z.enum([
   "undefined",

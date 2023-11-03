@@ -1,3 +1,8 @@
 {
-  "hello": "Hello!"
+  "hsp3root-no-selected": "hsp3root is not selected.",
+  "agent": {
+    "hsp3root-unselected": "hsp3root is unselected.",
+    "resolution-method-call-error": "Resolution Method Call Error [{name}] \"{memessage}\""
+  },
+  "activation": "Activation"
 }
