@@ -1,8 +1,17 @@
 {
+  "activation": "Activation",
   "hsp3root-no-selected": "hsp3root is not selected.",
   "agent": {
     "hsp3root-unselected": "hsp3root is unselected.",
-    "resolution-method-call-error": "Resolution Method Call Error [{name}] \"{memessage}\""
+    "resolution-method-call-error": "Resolution Method Call Error [{name}] \"{message}\"",
+    "resolution-error-name-reason-message": "Resolution Error [{name}] \"{message}\"",
+    "globs-config-is-not-valid": "The value of toolset-hsp3.globs is not valid."
   },
-  "activation": "Activation"
+  "override": {
+    "not-support-static-config-version-of-extension": "The static config version specified in {extension_id} could not be supported. Please check that the version of this extension supports the static config version of {extension_id}.",
+    "not-a-valid-setting-id": "The static configuration [{setting_id}] of the extension \"{extension_id}\"] is not a valid setting ID.",
+    "there-is-no-setting": "There is no setting \"{report}\". Override was skipped.",
+    "issue-with-listEx": "There is a problem with \"toolset-hsp3.override.listEx.{path}\". [{message}]",
+    "unknown-failed-to-override": "Failed to overwrite settings."
+  }
 }

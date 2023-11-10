@@ -1,6 +1,7 @@
 import {
   Disposable,
   ExtensionContext,
+  ExtensionMode,
   ShellExecution,
   Task,
   TaskScope,
@@ -14,6 +15,7 @@ import { Override } from "./override";
 import { provider } from "./provider";
 import { platform } from "node:os";
 import { i18n, init } from "./i18n";
+import { LogWriter } from "./log";
 
 /*
 import { I18n } from "i18n";
@@ -25,17 +27,22 @@ import enLocales from "../locales/en.json";
 */
 
 export async function activate(context: ExtensionContext) {
-  await init(env.language);
+  await init(env.language, {
+    debug: context.extensionMode === ExtensionMode.Development,
+  });
   //await i18n.changeLanguage(env.language);
   console.log(i18n.t("activation", { name: "toolset-hsp3" }));
+  LogWriter.init();
 
   const extension = new Extension(context);
   context.subscriptions.push(extension);
   extension.agent.method.registryToolsetProvider(provider);
   await extension.agent.load();
-  return extension.method;
+  return extension.method();
 }
-export function deactivate() {}
+export function deactivate() {
+  LogWriter.dispose();
+}
 
 class Extension implements Disposable {
   agent: Agent;
@@ -59,7 +66,32 @@ class Extension implements Disposable {
 
   public method = () => ({
     agent: this.agent.method,
-    override: { override: this.override.override() },
+    override: { override: () => this.override.override() },
+
+    // v0.x系の公開API、廃止予定のため非推奨。
+    current: this.agent.method.current,
+    hsp3dir: this.agent.method.hsp3dir,
+    showSelect: () => this.agent.showSelect(),
+
+    registryToolsetProvider: (
+      name: string,
+      provider: {
+        resolve(
+          patterns: string[]
+        ): Promise<{ errors: any[]; items: { name: string; path: string }[] }>;
+      }
+    ): { dispose: () => void } => {
+      return this.agent.method.registryToolsetProvider({
+        name,
+        async resolve(patterns) {
+          const { errors, items } = await provider.resolve(patterns);
+          return {
+            errors,
+            items,
+          };
+        },
+      });
+    },
   });
 
   // distに指定されたディレクトリパスをファイルマネージャーで開く

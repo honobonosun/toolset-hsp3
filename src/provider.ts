@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { AgentItem, AgentProvider, resolutionResult } from "./agent";
+import { AgentItem, AgentProvider } from "./agent";
 
 const hsp3clVersion = (
   path: string

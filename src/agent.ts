@@ -16,12 +16,7 @@ const pglob = promisify(glob);
 import isGlob = require("is-glob");
 import path = require("node:path");
 import { i18n } from "./i18n";
-
-enum logStatus {
-  "info",
-  "warn",
-  "error",
-}
+import { LogWriter } from "./log";
 
 export class NotInListError extends Error {
   constructor(message: string) {
@@ -36,7 +31,7 @@ export type AgentItem = {
 };
 
 export type resolutionResult = Promise<
-  { errors: any[]; items: AgentItem[] } | undefined
+  { errors: unknown[]; items: AgentItem[] } | undefined
 >;
 
 export interface AgentProvider {
@@ -71,7 +66,7 @@ export class Agent implements Disposable {
   private listener = new Map<symbol, ListenerCallback>();
   private providers = new Map<symbol, AgentProvider>();
   private current: AgentItem | undefined;
-  private outcha: import("vscode").OutputChannel;
+  private log: LogWriter;
   private cfg: import("vscode").WorkspaceConfiguration;
   private cache: AgentItem[] | undefined;
 
@@ -80,8 +75,7 @@ export class Agent implements Disposable {
 
     // UI
     this.langStatBar = new LangStatBar();
-
-    this.outcha = window.createOutputChannel("toolset-hsp3 agent");
+    this.log = new LogWriter("Agent");
 
     context.subscriptions.push(
       // config
@@ -98,7 +92,6 @@ export class Agent implements Disposable {
         window.showInformationMessage(i18n.t("agent.hsp3root-unselected"));
       }),
       commands.registerCommand("toolset-hsp3.hsp3root", () => this.hsp3root),
-      commands.registerCommand("toolset-hsp3.override", () => {}),
       commands.registerCommand(
         "toolset-hsp3.current.toString",
         () => this.hsp3root
@@ -109,26 +102,6 @@ export class Agent implements Disposable {
   public dispose() {
     this.listener.clear();
     this.langStatBar.dispose();
-    this.outcha.dispose();
-  }
-
-  private writeLog(status: logStatus, str: string) {
-    switch (status) {
-      /*
-      case logStatus.info:
-        this.outcha.info(str);
-        break;
-      case logStatus.warn:
-        this.outcha.warn(str);
-        break;
-      case logStatus.error:
-        this.outcha.error(str);
-        break;
-      */
-      default:
-        this.outcha.appendLine(str);
-        break;
-    }
   }
 
   // エージェント変化をcallback関数で購読できるようにする。
@@ -168,23 +141,25 @@ export class Agent implements Disposable {
       const resolve = provider[1].resolve;
       const result = await resolve(paths).then(undefined, (reason) => {
         if (reason instanceof Error)
-          this.writeLog(
-            logStatus.error,
+          this.log.error(
             i18n.t("agent.resolution-method-call-error", {
               name,
-              memessage: reason.message,
+              message: reason.message,
             })
             /*`Resolution Method Call Error [${name}] "${reason.message}"`*/
           );
-        else console.error("Resolution Method Call Error", name, reason);
+        else this.log.error("Resolution Method Call Error", [name, reason]);
       });
       if (result) {
         list = list.concat(result.items);
         for (const reason of result.errors)
           if (reason instanceof Error)
-            this.writeLog(
-              logStatus.error,
-              `Resolution Error [${name}] "${reason.message}"`
+            this.log.error(
+              i18n.t("agent.resolution-error-name-reason-message", {
+                name,
+                message: reason.message,
+              })
+              /*`Resolution Error [${name}] "${reason.message}"`*/
             );
           else console.error("Resolution Error", name, reason);
       }
@@ -197,7 +172,6 @@ export class Agent implements Disposable {
 
     this.langStatBar.busy = true;
     try {
-      let errors: unknown[] = [];
       let paths: string[] = [];
 
       // globパターンを求める
@@ -205,10 +179,7 @@ export class Agent implements Disposable {
         hsp3roots
       );
       if (!globPatterns) {
-        this.writeLog(
-          logStatus.error,
-          "The value of toolset-hsp3.globs is not valid."
-        );
+        this.log.error(i18n.t("agent.globs-config-is-not-valid"));
         return;
       }
 
@@ -219,10 +190,7 @@ export class Agent implements Disposable {
         if (el.status === "fulfilled") paths = paths.concat(el.value);
         else {
           if (el.reason instanceof Error)
-            this.writeLog(
-              logStatus.error,
-              `globs error [${el.reason.message}]`
-            );
+            this.log.error(`globs error [${el.reason.message}]`);
           else console.error(el.reason);
         }
       }
@@ -234,7 +202,7 @@ export class Agent implements Disposable {
       this.cache = resolutionResult;
     } catch (error) {
       if (error instanceof Error)
-        this.writeLog(logStatus.error, `LISTING ERROR : "${error.message}"`);
+        this.log.error(`LISTING ERROR : "${error.message}"`);
       else console.error("LISTING", error);
     } finally {
       this.langStatBar.busy = false;
@@ -316,11 +284,10 @@ export class Agent implements Disposable {
       if (this.current) return path.dirname(this.current.path);
       else return undefined;
     },
-    list: () => this.cache,
-    select: (item: AgentItem | undefined) => this.select(item),
     listen: (callback: ListenerCallback) => this.listen(callback),
     registryToolsetProvider: (provider: AgentProvider) =>
       this.registryToolsetProvider(provider),
+    // v0.x 互換用
     onDidChangeCurrent: (
       callback: (cur: AgentItem | undefined) => void
     ): Disposable => {

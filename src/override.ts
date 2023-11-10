@@ -2,26 +2,21 @@ import {
   ConfigurationTarget,
   Disposable,
   ExtensionContext,
-  ExtensionKind,
   ExtensionMode,
   commands,
   extensions,
   window,
   workspace,
 } from "vscode";
-import { ZodError, z } from "zod";
+import { z } from "zod";
 import { EXTENSION_NAME } from "./constant";
 import * as path from "node:path";
 import * as os from "node:os";
 import * as semver from "semver";
 import * as micromatch from "micromatch";
 import { Agent } from "./agent";
-
-const l10n = {
-  t: (str: string, object: object): string => {
-    return str;
-  },
-};
+import { LogWriter } from "./log";
+import { i18n } from "./i18n";
 
 const zScope = z.enum([
   "undefined",
@@ -110,12 +105,18 @@ export class Override implements Disposable {
   private cfg = workspace.getConfiguration(EXTENSION_NAME);
   private sc = new Map<string, string>();
   private struct: SettingStruct | undefined;
+  private log: LogWriter;
 
   constructor(
     private context: ExtensionContext,
     private methods: Agent["method"]
   ) {
+    this.log = new LogWriter("Override");
+
     this.subscriptions.push(
+      commands.registerCommand("toolset-hsp3.override", () => {
+        this.override();
+      }),
       workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration(EXTENSION_NAME))
           this.cfg = workspace.getConfiguration(EXTENSION_NAME);
@@ -131,7 +132,7 @@ export class Override implements Disposable {
           }
         }
       }),
-      methods.onDidChangeCurrent(async (item) => {
+      methods.onDidChangeCurrent(async () => {
         await this.updateHsp3Root();
         const reloadWindow = this.init;
         if (this.init === false) this.init = true;
@@ -148,21 +149,13 @@ export class Override implements Disposable {
   }
 
   logWrite(str: string) {
-    window.showInformationMessage(str);
+    this.log.write(str);
   }
 
   async updateHsp3Root() {
     this.hsp3root = await this.methods.hsp3dir();
     if (this.hsp3root) this.sc.set("HSP3_ROOT", this.hsp3root);
     else this.sc.delete("HSP3_ROOT");
-  }
-
-  getExtensionAllJSON() {
-    let list = [] as { id: string; json: any }[];
-    extensions.all.forEach((elm) => {
-      list.push({ id: elm.id, json: elm.packageJSON });
-    });
-    return list;
   }
 
   split = {
@@ -212,7 +205,7 @@ export class Override implements Disposable {
   }
 
   listingConfg(): SettingStruct {
-    let reload = false;
+    const reload = false;
     const settings: Setting[] = [];
     const scope = this.cfg.get<TypedScope>("override.scope") ?? "true";
 
@@ -248,9 +241,10 @@ export class Override implements Disposable {
         });
       }
     else {
+      // TODO : エラーを前面に表示したい
       items.error.issues.forEach((item) =>
-        window.showWarningMessage(
-          l10n.t('"toolset-hsp3.override.listEx.{path}" is {message}', {
+        this.log.write(
+          i18n.t("override.issue-with-listEx", {
             path: item.path.join("."),
             message: item.message,
           })
@@ -272,7 +266,12 @@ export class Override implements Disposable {
         if (elm.platform && elm.platform !== os.platform()) continue;
         const keys = this.split.section_key(elm.id);
         if (!keys) {
-          this.logWrite(`${data.id}.settings.${elm.id} is wrong.`);
+          this.logWrite(
+            i18n.t("override.not-a-valid-setting-id", {
+              extension_id: data.id,
+              setting_id: elm.id,
+            })
+          );
           continue;
         }
 
@@ -308,6 +307,15 @@ export class Override implements Disposable {
         if (semver.valid(configuration.version)) {
           if (semver.satisfies(configuration.version, "1.x"))
             v1({ id: elm.id, json: elm.json["toolset-hsp3"] });
+          else
+            this.log.write(
+              i18n.t(
+                "override.not-support-static-config-version-of-extension",
+                {
+                  extension_id: elm.id,
+                }
+              )
+            );
         }
       } else {
         this.logWrite(
@@ -375,10 +383,8 @@ export class Override implements Disposable {
         window.activeTextEditor?.document
       );
       if (!cfg.has(elm.key)) {
-        window.showWarningMessage(
-          l10n.t('There is no setting "{report}". Override was skipped.', {
-            report: elm.report,
-          })
+        this.log.write(
+          i18n.t("override.there-is-no-setting", { report: elm.report })
         );
         continue;
       }
@@ -388,18 +394,19 @@ export class Override implements Disposable {
         if (cfg.inspect(item.key)?.globalValue !== value)
           await cfg
             .update(item.key, value, cfgTarget(item.scope))
-            .then(undefined, (error) => {
-              console.error(error);
-              window.showErrorMessage(
-                l10n.t(
-                  "Failed to override the settings of other extensions. [{message}]",
-                  {
-                    message: `"${[item.section, item.key].join(".")}" : "${
-                      (error as Error).message
-                    }"`,
-                  }
-                )
-              );
+            .then(undefined, (error: unknown) => {
+              if (error instanceof Error)
+                this.log.write(
+                  i18n.t(
+                    "override.failed-to-override-the-settings-of-other-extensions",
+                    { path: "", message: "" }
+                  )
+                );
+              else
+                this.log.write(i18n.t("override.unknown-failed-to-override"), [
+                  `path:${[item.section, item.key].join(".")}`,
+                  `stack:${error}`,
+                ]);
             });
       };
       promises.push(write(elm, value));
