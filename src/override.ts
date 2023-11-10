@@ -148,10 +148,6 @@ export class Override implements Disposable {
     for (const item of this.subscriptions) item.dispose();
   }
 
-  logWrite(str: string) {
-    this.log.write(str);
-  }
-
   async updateHsp3Root() {
     this.hsp3root = await this.methods.hsp3dir();
     if (this.hsp3root) this.sc.set("HSP3_ROOT", this.hsp3root);
@@ -243,7 +239,7 @@ export class Override implements Disposable {
     else {
       // TODO : エラーを前面に表示したい
       items.error.issues.forEach((item) =>
-        this.log.write(
+        this.log.error(
           i18n.t("override.issue-with-listEx", {
             path: item.path.join("."),
             message: item.message,
@@ -266,7 +262,7 @@ export class Override implements Disposable {
         if (elm.platform && elm.platform !== os.platform()) continue;
         const keys = this.split.section_key(elm.id);
         if (!keys) {
-          this.logWrite(
+          this.log.error(
             i18n.t("override.not-a-valid-setting-id", {
               extension_id: data.id,
               setting_id: elm.id,
@@ -308,7 +304,7 @@ export class Override implements Disposable {
           if (semver.satisfies(configuration.version, "1.x"))
             v1({ id: elm.id, json: elm.json["toolset-hsp3"] });
           else
-            this.log.write(
+            this.log.error(
               i18n.t(
                 "override.not-support-static-config-version-of-extension",
                 {
@@ -318,7 +314,7 @@ export class Override implements Disposable {
             );
         }
       } else {
-        this.logWrite(
+        this.log.error(
           `error zod parse. [${elm.id}] : [${result.error.message}]`
         );
       }
@@ -353,8 +349,7 @@ export class Override implements Disposable {
             )
         );
     } catch (error) {
-      if (error instanceof Error) this.logWrite(error.message);
-      console.error(error);
+      if (error instanceof Error) this.log.error(error.message);
     }
 
     return {
@@ -383,7 +378,7 @@ export class Override implements Disposable {
         window.activeTextEditor?.document
       );
       if (!cfg.has(elm.key)) {
-        this.log.write(
+        this.log.error(
           i18n.t("override.there-is-no-setting", { report: elm.report })
         );
         continue;
@@ -395,18 +390,10 @@ export class Override implements Disposable {
           await cfg
             .update(item.key, value, cfgTarget(item.scope))
             .then(undefined, (error: unknown) => {
-              if (error instanceof Error)
-                this.log.write(
-                  i18n.t(
-                    "override.failed-to-override-the-settings-of-other-extensions",
-                    { path: "", message: "" }
-                  )
-                );
-              else
-                this.log.write(i18n.t("override.unknown-failed-to-override"), [
-                  `path:${[item.section, item.key].join(".")}`,
-                  `stack:${error}`,
-                ]);
+              this.log.error(i18n.t("override.unknown-failed-to-override"), [
+                `(${[item.section, item.key].join(".")})`,
+                `${error}`,
+              ]);
             });
       };
       promises.push(write(elm, value));
