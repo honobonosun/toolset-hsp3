@@ -1,5 +1,5 @@
 {
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.formatOnSaveMode": "modificationsIfAvailable",
   "editor.formatOnType": true,
   "[typescript]": {

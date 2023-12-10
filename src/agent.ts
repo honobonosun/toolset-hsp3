@@ -13,7 +13,6 @@ import { platform } from "node:os";
 import { EXTENSION_NAME } from "./constant";
 import glob = require("glob");
 const pglob = promisify(glob);
-import isGlob = require("is-glob");
 import path = require("node:path");
 import { i18n } from "./i18n";
 import { LogWriter } from "./log";
@@ -54,12 +53,9 @@ const get_hsp3roots = () => {
 };
 const hsp3roots: string[] = get_hsp3roots();
 
-// glob対応版
-const hsp3roots_glob: string[] = hsp3roots.map((elm) => {
-  if (platform() === "win32")
-    return elm.replace(/^[cC]:\\/, "/").replace(/\\/g, "/");
-  else return elm;
-});
+// Win環境のパス表記をnode-globの仕様に変換する。
+const escapeWinGlob = (word: string) =>
+  word.replace(/^[cC]:\\/, "/").replace(/\\/g, "/");
 
 export class Agent implements Disposable {
   private langStatBar: LangStatBar;
@@ -79,16 +75,17 @@ export class Agent implements Disposable {
 
     context.subscriptions.push(
       // config
-      workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration(EXTENSION_NAME))
+      workspace.onDidChangeConfiguration(async (e) => {
+        if (e.affectsConfiguration(EXTENSION_NAME)) {
           this.cfg = workspace.getConfiguration(EXTENSION_NAME);
+          if (e.affectsConfiguration("toolset-hsp3.globs")) this.refresh();
+        }
       }),
-
       // command
       commands.registerCommand("toolset-hsp3.select", () => this.showSelect()),
       commands.registerCommand("toolset-hsp3.unset", () => {
         this.select(undefined);
-        this.resetCache();
+        this.refresh();
         window.showInformationMessage(i18n.t("agent.hsp3root-unselected"));
       }),
       commands.registerCommand("toolset-hsp3.hsp3root", () => this.hsp3root),
@@ -161,7 +158,7 @@ export class Agent implements Disposable {
               })
               /*`Resolution Error [${name}] "${reason.message}"`*/
             );
-          else console.error("Resolution Error", name, reason);
+          else this.log.error("Resolution Error", [name, reason]);
       }
     }
     return list;
@@ -184,7 +181,7 @@ export class Agent implements Disposable {
       }
 
       // globする
-      const globbing = globPatterns.map((val) => pglob(val));
+      const globbing = globPatterns.map((val) => pglob(escapeWinGlob(val)));
       const globResult = await Promise.allSettled(globbing);
       for (const el of globResult) {
         if (el.status === "fulfilled") paths = paths.concat(el.value);
@@ -211,8 +208,9 @@ export class Agent implements Disposable {
     return this.cache;
   }
 
-  resetCache() {
+  async refresh() {
     this.cache = undefined;
+    this.cache = await this.listing();
   }
 
   inCache(item: AgentItem) {
@@ -255,7 +253,7 @@ export class Agent implements Disposable {
       if (!list) return [];
 
       const description = (longname: string) => {
-        if (hsp3roots_glob.indexOf(longname) > 0) return "HSP3_ROOT";
+        if (hsp3roots.indexOf(path.dirname(longname)) > -1) return "HSP3_ROOT";
         else return undefined;
       };
 
@@ -274,19 +272,17 @@ export class Agent implements Disposable {
 
   get hsp3root() {
     if (this.current) return path.dirname(this.current.path);
-    else return "";
+    else return undefined;
   }
 
   // 公開メソッド
   public readonly method = {
     current: () => this.current,
-    hsp3dir: (): string | undefined => {
-      if (this.current) return path.dirname(this.current.path);
-      else return undefined;
-    },
+    hsp3root: () => this.hsp3root,
     listen: (callback: ListenerCallback) => this.listen(callback),
     registryToolsetProvider: (provider: AgentProvider) =>
       this.registryToolsetProvider(provider),
+    refresh: () => this.refresh(),
     // v0.x 互換用
     onDidChangeCurrent: (
       callback: (cur: AgentItem | undefined) => void
@@ -294,7 +290,7 @@ export class Agent implements Disposable {
       return this.listen((status) => {
         if (status === AgentState.updateCurrent) callback(this.current);
       });
-    },
+    }
   };
 }
 

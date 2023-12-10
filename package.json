@@ -51,7 +51,7 @@
         },
         "toolset-hsp3.override.scope": {
           "type": "string",
-          "default": "true",
+          "default": "undefined",
           "markdownDescription": "%package.description.cfg.override.scope%",
           "enum": [
             "undefined",
@@ -125,8 +125,9 @@
           "items": {
             "type": "string"
           },
-          "default": [
-            "honobonosun\\.language-hsp3\\.helpman\\.path\\.local"
+          "default": [],
+          "examples": [
+            ["honobonosun\\.language-hsp3\\.helpman\\.path\\.local"]
           ],
           "markdownDescription": "%package.description.cfg.override.ignores%",
           "scope": "machine"
@@ -209,9 +210,7 @@
   },
   "dependencies": {
     "glob": "^8.0.3",
-    "i18n": "^0.15.1",
     "i18next": "^23.6.0",
-    "is-glob": "^4.0.3",
     "micromatch": "^4.0.5",
     "semver": "^7.5.4",
     "zod": "^3.21.4"

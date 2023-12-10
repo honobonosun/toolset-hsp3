@@ -132,8 +132,8 @@ export class Override implements Disposable {
           }
         }
       }),
-      methods.onDidChangeCurrent(async () => {
-        await this.updateHsp3Root();
+      methods.onDidChangeCurrent(() => {
+        this.updateHsp3Root();
         const reloadWindow = this.init;
         if (this.init === false) this.init = true;
         const cfg = workspace.getConfiguration(EXTENSION_NAME);
@@ -148,8 +148,8 @@ export class Override implements Disposable {
     for (const item of this.subscriptions) item.dispose();
   }
 
-  async updateHsp3Root() {
-    this.hsp3root = await this.methods.hsp3dir();
+  updateHsp3Root() {
+    this.hsp3root = this.methods.hsp3root();
     if (this.hsp3root) this.sc.set("HSP3_ROOT", this.hsp3root);
     else this.sc.delete("HSP3_ROOT");
   }

@@ -8,8 +8,8 @@
     "globs-config-is-not-valid": "The value of toolset-hsp3.globs is not valid."
   },
   "override": {
-    "not-support-static-config-version-of-extension": "The static config version specified in {extension_id} could not be supported. Please check that the version of this extension supports the static config version of {extension_id}.",
-    "not-a-valid-setting-id": "The static configuration [{setting_id}] of the extension \"{extension_id}\"] is not a valid setting ID.",
+    "not-support-static-config-version-of-extension": "The static configuration version specified in the extension \"{extension_id}\" is not supported by this extension version. Please check the support status of each extension.",
+    "not-a-valid-setting-id": "The static configuration [{setting_id}] of the extension \"{extension_id}\" is not a valid setting ID.",
     "there-is-no-setting": "There is no setting \"{report}\". Override was skipped.",
     "issue-with-listEx": "There is a problem with \"toolset-hsp3.override.listEx.{path}\". [{message}]",
     "unknown-failed-to-override": "Failed to overwrite settings."

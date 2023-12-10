@@ -53,7 +53,7 @@ class Extension implements Disposable {
 
     context.subscriptions.push(
       commands.registerCommand("toolset-hsp3.open", () => {
-        const hsp3dir = this.agent.method.hsp3dir();
+        const hsp3dir = this.agent.method.hsp3root();
         if (hsp3dir) this.open(hsp3dir);
         else window.showErrorMessage(i18n.t("hsp3root-no-selected"));
       })
@@ -70,7 +70,7 @@ class Extension implements Disposable {
 
     // v0.x系の公開API、廃止予定のため非推奨。
     current: this.agent.method.current,
-    hsp3dir: this.agent.method.hsp3dir,
+    hsp3dir: this.agent.method.hsp3root,
     showSelect: () => this.agent.showSelect(),
 
     registryToolsetProvider: (
@@ -78,6 +78,7 @@ class Extension implements Disposable {
       provider: {
         resolve(
           patterns: string[]
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ): Promise<{ errors: any[]; items: { name: string; path: string }[] }>;
       }
     ): { dispose: () => void } => {

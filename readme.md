@@ -38,6 +38,8 @@ You can read about other specifications in the repository.
 
 ### toolset-hsp3.override.enable
 
+trueに設定する事で、他の拡張機能の設定を上書きする機能を有効化します。
+
 ### toolset-hsp3.override.list
 
 このリストに記入した設定は、Override コマンドを実行する事で、現在の hsp3root に設定を上書きされます。
@@ -53,6 +55,8 @@ You can read about other specifications in the repository.
 ```
 
 ### toolset-hsp3.override.listEx
+
+
 
 ```json
 {
