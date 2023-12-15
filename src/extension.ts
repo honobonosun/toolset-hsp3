@@ -16,6 +16,7 @@ import { provider } from "./provider";
 import { platform } from "node:os";
 import { i18n, init } from "./i18n";
 import { LogWriter } from "./log";
+import { TaskEnv } from "./env";
 
 /*
 import { I18n } from "i18n";
@@ -27,6 +28,7 @@ import enLocales from "../locales/en.json";
 */
 
 export async function activate(context: ExtensionContext) {
+  // 表示言語の初期化
   await init(env.language, {
     debug: context.extensionMode === ExtensionMode.Development,
   });
@@ -34,10 +36,12 @@ export async function activate(context: ExtensionContext) {
   console.log(i18n.t("activation", { name: "toolset-hsp3" }));
   LogWriter.init();
 
+  // 拡張機能の初期化
   const extension = new Extension(context);
   context.subscriptions.push(extension);
   extension.agent.method.registryToolsetProvider(provider);
   await extension.agent.load();
+  extension.taskenv.update();
   return extension.method();
 }
 export function deactivate() {
@@ -47,9 +51,11 @@ export function deactivate() {
 class Extension implements Disposable {
   agent: Agent;
   override: Override;
+  taskenv: TaskEnv;
   constructor(private context: ExtensionContext) {
     this.agent = new Agent(context);
     this.override = new Override(context, this.agent.method);
+    this.taskenv = new TaskEnv(context, this.agent.method);
 
     context.subscriptions.push(
       commands.registerCommand("toolset-hsp3.open", () => {

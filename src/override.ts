@@ -109,7 +109,7 @@ export class Override implements Disposable {
 
   constructor(
     private context: ExtensionContext,
-    private methods: Agent["method"]
+    private agentMethods: Agent["method"]
   ) {
     this.log = new LogWriter("Override");
 
@@ -132,7 +132,7 @@ export class Override implements Disposable {
           }
         }
       }),
-      methods.onDidChangeCurrent(() => {
+      agentMethods.onDidChangeCurrent(() => {
         this.updateHsp3Root();
         const reloadWindow = this.init;
         if (this.init === false) this.init = true;
@@ -149,7 +149,7 @@ export class Override implements Disposable {
   }
 
   updateHsp3Root() {
-    this.hsp3root = this.methods.hsp3root();
+    this.hsp3root = this.agentMethods.hsp3root();
     if (this.hsp3root) this.sc.set("HSP3_ROOT", this.hsp3root);
     else this.sc.delete("HSP3_ROOT");
   }

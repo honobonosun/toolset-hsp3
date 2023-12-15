@@ -227,6 +227,7 @@ export class Agent implements Disposable {
       "toolset-hsp3.current"
     );
     this.update();
+    return this.current
   }
 
   // workspaceStateに現在の状態を保存する。
