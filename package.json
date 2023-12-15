@@ -19,7 +19,6 @@
   "engines": {
     "vscode": "^1.70.3"
   },
-  "l10n": "./l10n",
   "displayName": "toolset-hsp3",
   "categories": [
     "Programming Languages"
@@ -127,7 +126,9 @@
           },
           "default": [],
           "examples": [
-            ["honobonosun\\.language-hsp3\\.helpman\\.path\\.local"]
+            [
+              "honobonosun\\.language-hsp3\\.helpman\\.path\\.local"
+            ]
           ],
           "markdownDescription": "%package.description.cfg.override.ignores%",
           "scope": "machine"
@@ -136,6 +137,42 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "%package.description.cfg.task.env.enable%",
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.HSP3_ROOT.enable": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.HSP3_ROOT.alone": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "%package_description_cfg_task_env_HSP3ROOT_alone%",
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.HSP3_ROOT.priority": {
+          "type": "string",
+          "default": "top",
+          "enum": [
+            "top",
+            "second",
+            "bottom"
+          ],
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.PATH.enable": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%package.description.cfg.task.env.enable%",
+          "scope": "machine"
+        },
+        "toolset-hsp3.task.env.PATH.priority": {
+          "type": "string",
+          "default": "top",
+          "enum": [
+            "top",
+            "bottom"
+          ],
           "scope": "machine"
         },
         "toolset-hsp3.test.path": {
