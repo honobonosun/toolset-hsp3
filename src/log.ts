@@ -1,7 +1,9 @@
 import { window } from "vscode";
+import { i18n } from "./i18n";
+
+let time: NodeJS.Timeout | undefined;
 
 export type LogLevel = "info" | "warn" | "error";
-
 const c = {
   info: console.info,
   warn: console.warn,
@@ -19,19 +21,18 @@ export class LogWriter {
   }
   /** コンソールへログを転送するか？trueで転送する。 */
   static dubbing: boolean = false;
+  /** ログの通知が必要なレベル info(全部) > warn > error(だけ) */
+  static infoLimit: LogLevel = "error";
+  /** ログが更新されたことを通知するか */
+  static autoPop: boolean = true;
 
-  static readonly Level = {
-    info: "info",
-    warn: "warn",
-    error: "error",
-  } as const;
-
-  constructor(private name: string) {
-    if (name.match(":")) throw new Error("「:」文字は予約されています。");
-  }
-
-  write(level: LogLevel, message: string, args?: unknown[]) {
-    const out = `${this.name} : ${message}`;
+  static write(
+    name: string,
+    level: LogLevel,
+    message: string,
+    args?: unknown[]
+  ) {
+    const out = `${name} : ${message}`;
     LogWriter.outcha.appendLine(`${level} : ${out}`);
     if (LogWriter.dubbing) c[level](out);
 
@@ -42,6 +43,37 @@ export class LogWriter {
           LogWriter.outcha.appendLine(str);
           if (LogWriter.dubbing) c[level](str);
         });
+
+    const int = (level: LogLevel) => {
+      switch (level) {
+        case "info":
+          return 0;
+        case "warn":
+          return 1;
+        case "error":
+          return 2;
+      }
+    };
+
+    if (LogWriter.autoPop && int(level) >= int(LogWriter.infoLimit)) {
+      if (time) clearTimeout(time);
+      const label = i18n.t("show") ?? "Show";
+      time = setTimeout(async () => {
+        const val = await window.showInformationMessage(
+          i18n.t("unread-log"),
+          label
+        );
+        if (val === label) LogWriter.outcha.show();
+      }, 1000);
+    }
+  }
+
+  constructor(private name: string) {
+    if (name.match(":")) throw new Error("「:」文字は予約されています。");
+  }
+
+  write(level: LogLevel, message: string, args?: unknown[]) {
+    LogWriter.write(this.name, level, message, args);
   }
 
   info(message: string, args?: unknown[]) {

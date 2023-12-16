@@ -175,6 +175,17 @@
           ],
           "scope": "machine"
         },
+        "toolset-hsp3.log.autoPop": {
+          "type":"boolean",
+          "default": true,
+          "scope": "machine"
+        },
+        "toolset-hsp3.log.infoLimit": {
+          "type": "string",
+          "enum": ["info", "warn", "error"],
+          "default": "warn",
+          "scope": "machine"
+        },
         "toolset-hsp3.test.path": {
           "type": "string",
           "scope": "machine"

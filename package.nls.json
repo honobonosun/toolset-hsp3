@@ -15,5 +15,6 @@
   "package.description.cfg.override.scope": "Sets the scope to be used when overriding the \"toolset-hsp3.override.list\" setting.",
   "package.description.cfg.override.scope.Global": "Save to user settings.",
   "package.description.cfg.override.scope.Workspace": "Save to workspace settings.",
-  "package.description.cfg.override.scope.WorkspaceFolder": "Save the file in the directory \".vscode/settings.json\" or in the workspace settings."
+  "package.description.cfg.override.scope.WorkspaceFolder": "Save the file in the directory \".vscode/settings.json\" or in the workspace settings.",
+  "package_description_cfg_task_env_HSP3ROOT_alone": "neko"
 }

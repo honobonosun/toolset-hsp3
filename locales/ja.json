@@ -14,5 +14,7 @@
     "issue-with-listEx": "\"toolset-hsp3.override.listEx.{path}\"に問題があります。[{message}]",
     "failed-to-override-the-settings-of-other-extensions": "設定の上書きに失敗しました。({path}) [{message}]",
     "unknown-failed-to-override": "設定の上書きに失敗しました。"
-  }
+  },
+  "unread-log": "ログが更新されました。",
+  "show": "表示"
 }

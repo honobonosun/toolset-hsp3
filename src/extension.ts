@@ -2,30 +2,21 @@ import {
   Disposable,
   ExtensionContext,
   ExtensionMode,
-  ShellExecution,
-  Task,
-  TaskScope,
   commands,
   env,
-  tasks,
   window,
+  workspace,
 } from "vscode";
 import { Agent } from "./agent";
 import { Override } from "./override";
 import { provider } from "./provider";
 import { platform } from "node:os";
 import { i18n, init } from "./i18n";
-import { LogWriter } from "./log";
+import { LogLevel, LogWriter } from "./log";
 import { TaskEnv } from "./env";
-
-/*
-import { I18n } from "i18n";
-import { join } from "node:path";
-
-import i18next, { i18n } from "i18next";
-import jaLocales from "../locales/ja.json";
-import enLocales from "../locales/en.json";
-*/
+import { Launcher } from "./launch";
+import { exec } from "node:child_process";
+import { EXTENSION_NAME } from "./constant";
 
 export async function activate(context: ExtensionContext) {
   // 表示言語の初期化
@@ -33,8 +24,22 @@ export async function activate(context: ExtensionContext) {
     debug: context.extensionMode === ExtensionMode.Development,
   });
   //await i18n.changeLanguage(env.language);
-  console.log(i18n.t("activation", { name: "toolset-hsp3" }));
   LogWriter.init();
+  LogWriter.dubbing = context.extensionMode === ExtensionMode.Development;
+  if (context.extensionMode === ExtensionMode.Development)
+    LogWriter.outcha.appendLine(i18n.t("activation", { name: "toolset-hsp3" }));
+
+  const updateLogConfig = () => {
+    const cfg = workspace.getConfiguration(EXTENSION_NAME);
+    LogWriter.autoPop = cfg.get<boolean>("log.autoPop") ?? true;
+    LogWriter.infoLimit = cfg.get<LogLevel>("log.infoLimit") ?? "error";
+  };
+  updateLogConfig();
+  context.subscriptions.push(
+    workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(EXTENSION_NAME)) updateLogConfig();
+    })
+  );
 
   // 拡張機能の初期化
   const extension = new Extension(context);
@@ -52,10 +57,14 @@ class Extension implements Disposable {
   agent: Agent;
   override: Override;
   taskenv: TaskEnv;
+  launcher: Launcher;
+  log: LogWriter;
   constructor(private context: ExtensionContext) {
+    this.log = new LogWriter("Extension");
     this.agent = new Agent(context);
     this.override = new Override(context, this.agent.method);
     this.taskenv = new TaskEnv(context, this.agent.method);
+    this.launcher = new Launcher(context, this.agent.method);
 
     context.subscriptions.push(
       commands.registerCommand("toolset-hsp3.open", () => {
@@ -115,6 +124,20 @@ class Extension implements Disposable {
             : "xdg-open .";
       }
     })(dist);
+
+    const child = exec(command, { cwd: dist });
+    this.log.info(`launch command "${command}" PID[${child.pid ?? 0}]`);
+    child.on("exit", (code) => {
+      this.log.info(
+        `launched command "${command}" PID[${child.pid ?? 0}] exit (${code}).`
+      );
+    });
+
+    /*
+    this.launcher.launch(command, [], dist);
+    */
+
+    /*
     tasks.executeTask(
       new Task(
         { type: "shell", command, cwd: dist },
@@ -124,5 +147,6 @@ class Extension implements Disposable {
         new ShellExecution(command, { cwd: dist })
       )
     );
+    */
   }
 }

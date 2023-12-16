@@ -15,5 +15,6 @@
   "package.description.cfg.override.scope": "\"toolset-hsp3.override.list\"の設定上書き時に使用するスコープを設定します。",
   "package.description.cfg.override.scope.Global": "ユーザー設定に保存します。",
   "package.description.cfg.override.scope.Workspace": "ワークスペース設定に保存します。",
-  "package.description.cfg.override.scope.WorkspaceFolder": "ディレクトリの\".vscode/settings.json\"もしくは、ワークスペース設定に保存します。"
+  "package.description.cfg.override.scope.WorkspaceFolder": "ディレクトリの\".vscode/settings.json\"もしくは、ワークスペース設定に保存します。",
+  "package_description_cfg_task_env_HSP3ROOT_alone": "neko"
 }
