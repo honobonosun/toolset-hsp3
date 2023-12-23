@@ -269,7 +269,7 @@ export class Extension implements Disposable {
 
       // ターミナル環境変数 更新
       const cfg = workspace.getConfiguration(EXTENSION_NAME);
-      if (cfg.get("task.env.enable") === true) {
+      if (cfg.get("env.enable") === true) {
         this.context.environmentVariableCollection.clear();
         this.context.environmentVariableCollection.replace(
           "HSP3_ROOT",

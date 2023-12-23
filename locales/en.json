@@ -15,5 +15,6 @@
     "unknown-failed-to-override": "Failed to overwrite settings."
   },
   "unread-log": "Log updated.",
-  "show": "Show"
+  "show": "Show",
+  "pkg_desc_cfg_task_env_HSP3ROOT_single": "neko"
 }

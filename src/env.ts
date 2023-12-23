@@ -36,8 +36,8 @@ export class TaskEnv implements Disposable {
       return;
     }
 
-    if (cfg.get<boolean>("task.env.HSP3_ROOT.enable")) {
-      if (cfg.get<boolean>("task.env.HSP3_ROOT.alone")) {
+    if (cfg.get<boolean>("env.HSP3_ROOT.enable")) {
+      if (cfg.get<boolean>("env.HSP3_ROOT.single")) {
         this.context.environmentVariableCollection.replace(
           "HSP3_ROOT",
           hsp3root
@@ -45,7 +45,7 @@ export class TaskEnv implements Disposable {
       } else {
         const separator = platform() === "win32" ? ";" : ":";
         const priority =
-          cfg.get<PriorityHsp3Root>("task.env.HSP3_ROOT.priority") ?? "top";
+          cfg.get<PriorityHsp3Root>("env.HSP3_ROOT.priority") ?? "top";
 
         const save = {
           top: () => {
@@ -83,9 +83,9 @@ export class TaskEnv implements Disposable {
       return;
     }
 
-    if (cfg.get<boolean>("task.env.PATH.enable")) {
+    if (cfg.get<boolean>("env.PATH.enable")) {
       const separator = platform() === "win32" ? ";" : ":";
-      const priority = cfg.get<priorityPath>("task.env.PATH.Priority") ?? "top";
+      const priority = cfg.get<priorityPath>("env.PATH.Priority") ?? "top";
       if (priority === "top") {
         this.context.environmentVariableCollection.prepend(
           "PATH",
@@ -104,7 +104,7 @@ export class TaskEnv implements Disposable {
 
   update() {
     const cfg = workspace.getConfiguration(EXTENSION_NAME);
-    if (cfg.get<boolean>("task.env.enable")) {
+    if (cfg.get<boolean>("env.enable")) {
       this.updateHsp3Root(cfg);
       this.updatePath(cfg);
     } else {

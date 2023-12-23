@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "preview": true,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
@@ -41,17 +41,17 @@
             "/hsp3*"
           ],
           "scope": "machine",
-          "markdownDescription": "%package.description.cfg.globs%"
+          "markdownDescription": "%pkg_desc_cfg_globs%"
         },
         "toolset-hsp3.override.enable": {
           "type": "boolean",
-          "markdownDescription": "%package.description.cfg.override.enable%",
+          "markdownDescription": "%pkg_desc_cfg_override_enable%",
           "scope": "machine"
         },
         "toolset-hsp3.override.scope": {
           "type": "string",
           "default": "undefined",
-          "markdownDescription": "%package.description.cfg.override.scope%",
+          "markdownDescription": "%pkg_desc_cfg_override_scope%",
           "enum": [
             "undefined",
             "false",
@@ -64,20 +64,20 @@
             "undefined",
             "false",
             "true",
-            "%package.description.cfg.override.scope.Global%",
-            "%package.description.cfg.override.scope.Workspace%",
-            "%package.description.cfg.override.scope.WorkspaceFolder%"
+            "%pkg_desc_cfg_override_scope_Global%",
+            "%pkg_desc_cfg_override_scope_Workspace%",
+            "%pkg_desc_cfg_override_scope_WorkspaceFolder%"
           ]
         },
         "toolset-hsp3.override.applyChangesImmediately": {
           "type": "boolean",
           "scope": "machine",
-          "markdownDescription": "%package.description.cfg.override.applyChangesImmediately%"
+          "markdownDescription": "%pkg_desc_cfg_override_applyChangesImmediately%"
         },
         "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
           "type": "boolean",
           "scope": "machine",
-          "markdownDescription": "%package.description.cfg.override.applyChangesImmediatelyInReloadWindow%"
+          "markdownDescription": "%pkg_desc_cfg_override_applyChangesImmediatelyInReloadWindow%"
         },
         "toolset-hsp3.override.list": {
           "type": "array",
@@ -95,7 +95,7 @@
               "vain0x.hsp3-analyzer-mini.hsp3-root"
             ]
           ],
-          "markdownDescription": "%package.description.cfg.override.list%"
+          "markdownDescription": "%pkg_desc_cfg_override_list%"
         },
         "toolset-hsp3.override.listEx": {
           "type": "array",
@@ -117,7 +117,7 @@
               }
             ]
           ],
-          "markdownDescription": "%package.description.cfg.override.listEx%"
+          "markdownDescription": "%pkg_desc_cfg_override_listEx%"
         },
         "toolset-hsp3.override.ignores": {
           "type": "array",
@@ -130,27 +130,27 @@
               "honobonosun\\.language-hsp3\\.helpman\\.path\\.local"
             ]
           ],
-          "markdownDescription": "%package.description.cfg.override.ignores%",
+          "markdownDescription": "%pkg_desc_cfg_override_ignores%",
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.enable": {
+        "toolset-hsp3.env.enable": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "%package.description.cfg.task.env.enable%",
+          "markdownDescription": "%pkg_desc_cfg_task_env_enable%",
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.HSP3_ROOT.enable": {
+        "toolset-hsp3.env.HSP3_ROOT.enable": {
           "type": "boolean",
           "default": true,
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.HSP3_ROOT.alone": {
+        "toolset-hsp3.env.HSP3_ROOT.single": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "%package_description_cfg_task_env_HSP3ROOT_alone%",
+          "markdownDescription": "%pkg_desc_cfg_task_env_HSP3ROOT_single%",
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.HSP3_ROOT.priority": {
+        "toolset-hsp3.env.HSP3_ROOT.priority": {
           "type": "string",
           "default": "top",
           "enum": [
@@ -160,13 +160,13 @@
           ],
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.PATH.enable": {
+        "toolset-hsp3.env.PATH.enable": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "%package.description.cfg.task.env.enable%",
+          "markdownDescription": "%pkg_desc_cfg_task_env_PATH_enable%",
           "scope": "machine"
         },
-        "toolset-hsp3.task.env.PATH.priority": {
+        "toolset-hsp3.env.PATH.priority": {
           "type": "string",
           "default": "top",
           "enum": [
@@ -196,22 +196,22 @@
     "commands": [
       {
         "command": "toolset-hsp3.select",
-        "title": "%package.title.cmd.select%",
+        "title": "%pkg_title_cmd_select%",
         "category": "hsp.toolset"
       },
       {
         "command": "toolset-hsp3.unset",
-        "title": "%package.title.cmd.unset%",
+        "title": "%pkg_title_cmd_unset%",
         "category": "hsp.toolset"
       },
       {
         "command": "toolset-hsp3.open",
-        "title": "%package.title.cmd.open%",
+        "title": "%pkg_title_cmd_open%",
         "category": "hsp.toolset"
       },
       {
         "command": "toolset-hsp3.override",
-        "title": "%package.title.cmd.override%",
+        "title": "%pkg_title_cmd_override%",
         "category": "hsp.toolset"
       },
       {
