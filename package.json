@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.7.2",
+  "version": "0.9.0",
   "preview": true,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
@@ -136,18 +136,19 @@
         "toolset-hsp3.env.enable": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "%pkg_desc_cfg_task_env_enable%",
+          "markdownDescription": "%pkg_desc_cfg_env_enable%",
           "scope": "machine"
         },
         "toolset-hsp3.env.HSP3_ROOT.enable": {
           "type": "boolean",
           "default": true,
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_env_HSP3ROOT_enable%"
         },
         "toolset-hsp3.env.HSP3_ROOT.single": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "%pkg_desc_cfg_task_env_HSP3ROOT_single%",
+          "markdownDescription": "%pkg_desc_cfg_env_HSP3ROOT_single%",
           "scope": "machine"
         },
         "toolset-hsp3.env.HSP3_ROOT.priority": {
@@ -158,12 +159,13 @@
             "second",
             "bottom"
           ],
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_env_HSP3ROOT_priority%"
         },
         "toolset-hsp3.env.PATH.enable": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "%pkg_desc_cfg_task_env_PATH_enable%",
+          "markdownDescription": "%pkg_desc_cfg_env_PATH_enable%",
           "scope": "machine"
         },
         "toolset-hsp3.env.PATH.priority": {
@@ -173,18 +175,30 @@
             "top",
             "bottom"
           ],
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_env_PATH_priority%",
+          "enumDescriptions": [
+            "%pkg_desc_cfg_env_PATH_priority_top%",
+            "%pkg_desc_cfg_env_PATH_priority_bottom%"
+          ]
         },
         "toolset-hsp3.log.autoPop": {
           "type":"boolean",
           "default": true,
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_log_autoPop%"
         },
         "toolset-hsp3.log.infoLimit": {
           "type": "string",
           "enum": ["info", "warn", "error"],
           "default": "warn",
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_log_infoLimit%",
+          "enumDescriptions": [
+            "%pkg_desc_cfg_log_infoLimit_info%",
+            "%pkg_desc_cfg_log_infoLimit_warn%",
+            "%pkg_desc_cfg_log_infoLimit_error%"
+          ]
         },
         "toolset-hsp3.test.path": {
           "type": "string",
@@ -269,7 +283,7 @@
     }
   },
   "toolset-hsp3": {
-    "version": "2.0.0",
+    "version": "1.0.0",
     "enable": true,
     "settings": [
       {
