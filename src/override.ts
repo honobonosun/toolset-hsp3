@@ -100,7 +100,6 @@ const replaceRegexp = /%(.*?)%/g;
 
 export class Override implements Disposable {
   private subscriptions: Disposable[] = [];
-  private init = false;
   private hsp3root: string | undefined;
   private cfg = workspace.getConfiguration(EXTENSION_NAME);
   private sc = new Map<string, string>();
@@ -134,11 +133,8 @@ export class Override implements Disposable {
       }),
       agentMethods.onDidChangeCurrent(() => {
         this.updateHsp3Root();
-        const reloadWindow = this.init;
-        if (this.init === false) this.init = true;
         const cfg = workspace.getConfiguration(EXTENSION_NAME);
-        if (cfg.get("override.applyChangesImmediately"))
-          this.override(reloadWindow);
+        if (cfg.get("override.applyChangesImmediately")) this.override();
       }),
       extensions.onDidChange(() => this.override())
     );
@@ -358,7 +354,7 @@ export class Override implements Disposable {
     };
   }
 
-  async override(unlockReload: boolean = true) {
+  async override() {
     if (!this.cfg.get("override.enable")) return;
     if (!this.hsp3root) return;
 
@@ -403,14 +399,38 @@ export class Override implements Disposable {
 
     // 書き換えた後、ウィンドウの再読み込みが必要なら再読み込みする。
     if (
-      unlockReload &&
-      struct.reload &&
-      this.cfg.get("override.applyChangesImmediatelyInReloadWindow")
-    )
-      commands
-        .executeCommand("workbench.action.reloadWindow")
-        .then(undefined, (error) => {
-          console.log(error);
-        });
+      struct.reload ||
+      this.cfg.get<boolean>("override.applyChangesImmediatelyInReloadWindow")
+    ) {
+      if (this.cfg.get<boolean>("override.showPopInfo")) {
+        const buttonLabel_reload = i18n.t("reload");
+        const reval = await window.showInformationMessage(
+          i18n.t("reloadWindow"),
+          buttonLabel_reload
+        );
+        if (reval === buttonLabel_reload)
+          commands
+            .executeCommand("workbench.action.reloadWindow")
+            .then(undefined, (error) => {
+              this.log.error(
+                i18n.t("command_failed", {
+                  command_name: "workbench.action.reloadWindow",
+                }),
+                error
+              );
+            });
+      } else {
+        commands
+          .executeCommand("workbench.action.reloadWindow")
+          .then(undefined, (error) => {
+            this.log.error(
+              i18n.t("command_failed", {
+                command_name: "workbench.action.reloadWindow",
+              }),
+              error
+            );
+          });
+      }
+    }
   }
 }

@@ -11,6 +11,7 @@
   "pkg_desc_cfg_override_list": "List of configuration IDs to be overridden by hsp3root.",
   "pkg_desc_cfg_override_listEx": "Advanced configuration list to be overridden by hsp3root.",
   "pkg_desc_cfg_override_ignores": "A list of configuration IDs to ignore overwrites.",
+  "pkg_desc_cfg_override_showPopInfo": "Notify you when the window needs to be reloaded.",
   "pkg_desc_cfg_env_enable": "Overwrite the HSP3_ROOT variable in the terminal with hsp3root. (If changed while the terminal is running, the change will not take effect until the terminal is restarted.)",
   "pkg_desc_cfg_override_scope": "Sets the scope to be used when overriding the \"toolset-hsp3_override_list\" setting.",
   "pkg_desc_cfg_override_scope_Global": "Save to user settings.",

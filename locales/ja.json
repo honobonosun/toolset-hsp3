@@ -1,5 +1,5 @@
 {
-  "activation": "アクティベーション",
+  "activation": "アクティベーション（開発者モード）",
   "hsp3root-no-selected": "hsp3rootが未選択です。",
   "agent": {
     "hsp3root-unselected": "hsp3rootを未選択にしました。",
@@ -16,5 +16,8 @@
     "unknown-failed-to-override": "設定の上書きに失敗しました。"
   },
   "unread-log": "ログが更新されました。",
-  "show": "表示"
+  "show": "表示",
+  "reload": "再読み込み",
+  "reloadWindow": "設定変更を反映させるために、ウィンドウの再読み込みが必要です。",
+  "command_failed": "\"{command_name}\" コマンドの実行は失敗しました。"
 }

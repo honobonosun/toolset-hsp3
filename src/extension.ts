@@ -27,7 +27,7 @@ export async function activate(context: ExtensionContext) {
   LogWriter.init();
   LogWriter.dubbing = context.extensionMode === ExtensionMode.Development;
   if (context.extensionMode === ExtensionMode.Development)
-    LogWriter.outcha.appendLine(i18n.t("activation", { name: "toolset-hsp3" }));
+    LogWriter.outcha.appendLine(i18n.t("activation"));
 
   const updateLogConfig = () => {
     const cfg = workspace.getConfiguration(EXTENSION_NAME);

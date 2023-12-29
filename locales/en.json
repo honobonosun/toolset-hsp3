@@ -1,5 +1,5 @@
 {
-  "activation": "Activation",
+  "activation": "Activation (Dev Mode)",
   "hsp3root-no-selected": "hsp3root is not selected.",
   "agent": {
     "hsp3root-unselected": "hsp3root is unselected.",
@@ -15,5 +15,8 @@
     "unknown-failed-to-override": "Failed to overwrite settings."
   },
   "unread-log": "Log updated.",
-  "show": "Show"
+  "show": "Show",
+  "reload": "Reload",
+  "reloadWindow": "Will need to reload the window for the configuration changes to take effect.",
+  "command_failed": "Execution of the \"{command_name}\" command failed."
 }

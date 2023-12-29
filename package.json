@@ -133,6 +133,12 @@
           "markdownDescription": "%pkg_desc_cfg_override_ignores%",
           "scope": "machine"
         },
+        "toolset-hsp3.override.showPopInfo": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_override_showPopInfo%"
+        },
         "toolset-hsp3.env.enable": {
           "type": "boolean",
           "default": true,
