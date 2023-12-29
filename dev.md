@@ -1,40 +1,71 @@
-メモ
+拡張機能 開発者向け ノート
 
 - パッケージマネージャーは npm です。
 - コードフォーマッタは prettier です。
 - 拡張機能はサーバー側で動作します。
-- 多言語対応化は vscode の l10n を使用します。
+- 多言語対応化は i18next を使用します。
 - WSL に対応しています。
   - クロスプラットフォーム対応ですが、node_modules がネイティブバイナリを含むのに留意してください。
-  - プラットフォームごとに clone して npm install してください。
+  - **プラットフォームごとに clone して npm install してください。**
 
-# 他の拡張機能の設定上書き機能について
+# Override 機能
 
-toolset-hsp3 の公開 API に対応していない拡張機能へ現在の hsp3root の値を適用させる「設定上書き機能」を提供する Override モジュールを実装しました。
+この拡張機能は、VSCode にインストールされた全ての拡張機能の package.json から"toolset-hsp3"オブジェクトの記述を確認します。
 
-このモジュールは、拡張機能の package.json に静的もしくは、"toolset-hsp3.override.list"のリストを使用して対象の設定 ID を現在の hsp3root に上書きする二通りの方法で提供されます。
+"toolset-hsp3"オブジェクトは、以下の構造を求めます。満たされない場合、zod エラーをログへ出力して無視します。
 
-## 拡張機能側から Override 機能を使用する
+```json
+{
+  "toolset-hsp3": {
+    version: "1.0.0",
+    enable: boolean,
+    settings?: [
+      {
+        id: "publisher_name",
+        value: string | string[],
+        platform: "win32" | "darwin" | "linux",
+        scope: "undefined" | "false" | "true" | "Global" | "Workspace" | "WorkspaceFolder"
+      }
+    ],
+    reloadWindow?: boolean
+  }
+}
+```
 
-拡張機能の開発者は、toolset-hsp3 の Override 機能を自身の package.json に設定して使用する事ができます。
+"toolset-hsp3"オブジェクトが記述されていなければ、下記の既定構成になります。
 
 ```json
 {
   "toolset-hsp3": {
     "version": "1.0.0",
     "enable": true,
-    "settings": [
-      {
-        "id": "launcher-hsp3.path.hspcmp",
-        "value": ["%HSP3_ROOT%", "hspcmp"],
-        "platform": "win32"
-      }
-    ],
+    "settings": undefined,
     "reloadWindow": false
   }
 }
 ```
 
-## 上書き機能の拡張
+## プロパティの解説
 
-"toolset-hsp3.override.listEx"を使用することで、より詳細に上書きする値を制御できます。
+### version プロパティ
+
+使用する構成のバージョンを文字列で指定します。
+
+現在のバージョンは 1.0.0 です。
+
+### enable プロパティ
+
+toolset-hsp3にこの拡張機能の設定を上書きを許可するか指定します。
+
+trueで許可、falseで不許可になります。
+
+ユーザー側で設定の上書き指示があったとしても、不許可に指定された拡張機能の設定は、上書きすることはありません。
+
+### settings プロパティ
+
+#### id プロパティ
+#### value プロパティ
+#### platform プロパティ
+#### scope プロパティ
+
+### reloadWindow プロパティ

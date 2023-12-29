@@ -5,7 +5,7 @@
   "pkg_title_cmd_override": "hsp3rootで他の拡張機能の設定を上書きする",
   "pkg_desc": "自動でhsp3rootを設定する VS Code 拡張機能",
   "pkg_desc_cfg_globs": "HSP3 開発環境がインストールされているディレクトリを示す [node-glob](https://www_npmjs_com/package/glob) パターンを記入します。",
-  "pkg_desc_cfg_override_enable": "現在のhsp3rootで拡張設定を上書きする機能を有効にする。",
+  "pkg_desc_cfg_override_enable": "現在のhsp3rootで拡張機能の設定を上書きする機能を有効にする。",
   "pkg_desc_cfg_override_applyChangesImmediately": "hsp3rootを切り替えた直後に、他の拡張機能の設定を上書きします。",
   "pkg_desc_cfg_override_applyChangesImmediatelyInReloadWindow": "設定を上書きしたら、ウィンドウをリロードします。(実行コマンド 'workbench_action_reloadWindow')",
   "pkg_desc_cfg_override_list": "hsp3rootで上書きする設定IDリスト。",
