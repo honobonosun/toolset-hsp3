@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "preview": true,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
@@ -189,14 +189,18 @@
           ]
         },
         "toolset-hsp3.log.autoPop": {
-          "type":"boolean",
+          "type": "boolean",
           "default": true,
           "scope": "machine",
           "markdownDescription": "%pkg_desc_cfg_log_autoPop%"
         },
         "toolset-hsp3.log.infoLimit": {
           "type": "string",
-          "enum": ["info", "warn", "error"],
+          "enum": [
+            "info",
+            "warn",
+            "error"
+          ],
           "default": "warn",
           "scope": "machine",
           "markdownDescription": "%pkg_desc_cfg_log_infoLimit%",
@@ -290,17 +294,19 @@
   },
   "toolset-hsp3": {
     "version": "1.0.0",
-    "enable": true,
-    "settings": [
-      {
-        "id": "toolset-hsp3.test.path",
-        "value": [
-          "%HSP3_ROOT%",
-          "test"
-        ],
-        "scope": "Global"
-      }
-    ],
-    "reloadWindow": false
+    "override": {
+      "enable": true,
+      "settings": [
+        {
+          "id": "toolset-hsp3.test.path",
+          "value": [
+            "%HSP3_ROOT%",
+            "test"
+          ],
+          "scope": "Global"
+        }
+      ],
+      "reloadWindow": false
+    }
   }
 }

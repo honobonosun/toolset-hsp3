@@ -39,18 +39,22 @@ type TypedListExElm = z.infer<typeof zListExElm>;
 
 const zContributes = z.object({
   version: z.string(),
-  enable: z.boolean(),
-  settings: z.optional(
-    z.array(
-      z.object({
-        id: z.string(),
-        value: z.union([z.string(), z.array(z.string())]),
-        platform: z.optional(z.string()),
-        scope: zScope,
-      })
-    )
+  override: z.optional(
+    z.object({
+      enable: z.boolean(),
+      settings: z.optional(
+        z.array(
+          z.object({
+            id: z.string(),
+            value: z.union([z.string(), z.array(z.string())]),
+            platform: z.optional(z.string()),
+            scope: zScope,
+          })
+        )
+      ),
+      reloadWindow: z.optional(z.boolean()),
+    })
   ),
-  reloadWindow: z.optional(z.boolean()),
 });
 
 type TypedContributes = z.infer<typeof zContributes>;
@@ -252,9 +256,9 @@ export class Override implements Disposable {
     const settings: Setting[] = [];
 
     const v1 = (data: { id: string; json: TypedContributes }) => {
-      if (!data.json.settings) return;
-      if (data.json.reloadWindow === true) reload = true;
-      for (const elm of data.json.settings) {
+      if (!data.json.override?.settings) return;
+      if (data.json.override?.reloadWindow === true) reload = true;
+      for (const elm of data.json.override.settings) {
         if (elm.platform && elm.platform !== os.platform()) continue;
         const keys = this.split.section_key(elm.id);
         if (!keys) {
@@ -294,7 +298,7 @@ export class Override implements Disposable {
       if (result.success) {
         const configuration = result.data;
         // 有効確認
-        if (configuration.enable === false) continue;
+        if ((configuration.override?.enable ?? false) === false) continue;
         // バージョン確認
         if (semver.valid(configuration.version)) {
           if (semver.satisfies(configuration.version, "1.x"))
