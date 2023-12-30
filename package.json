@@ -10,7 +10,9 @@
     "workspace"
   ],
   "activationEvents": [
-    "onLanguage:hsp3"
+    "onLanguage:hsp3",
+    "workspaceContains:**/*.hsp",
+    "workspaceContains:**/*.as"
   ],
   "repository": "git@github.com:honobonosun/toolset-hsp3.git",
   "author": "Honobono",
