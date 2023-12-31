@@ -1,7 +1,0 @@
-hsp3rootを切り替えた直後に他の拡張機能の設定を上書きします。
-
-Overrides the settings of other extensions immediately after switching hsp3root.
-
-設定を上書きした後、ウィンドウの再読み込みを行います。
-
-After you have overridden the settings, reload the window.

@@ -45,8 +45,21 @@
           "scope": "machine",
           "markdownDescription": "%pkg_desc_cfg_globs%"
         },
+        "toolset-hsp3.agent.autoChoice.enable": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_agent_autoChoice_enable%"
+        },
+        "toolset-hsp3.agent.autoChoice.showPopInfo": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_agent_autoChoice_popInfo%"
+        },
         "toolset-hsp3.override.enable": {
           "type": "boolean",
+          "default": false,
           "markdownDescription": "%pkg_desc_cfg_override_enable%",
           "scope": "machine"
         },
@@ -74,11 +87,13 @@
         "toolset-hsp3.override.applyChangesImmediately": {
           "type": "boolean",
           "scope": "machine",
+          "default": true,
           "markdownDescription": "%pkg_desc_cfg_override_applyChangesImmediately%"
         },
         "toolset-hsp3.override.applyChangesImmediatelyInReloadWindow": {
           "type": "boolean",
           "scope": "machine",
+          "default": false,
           "markdownDescription": "%pkg_desc_cfg_override_applyChangesImmediatelyInReloadWindow%"
         },
         "toolset-hsp3.override.list": {

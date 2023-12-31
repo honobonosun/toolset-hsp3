@@ -5,7 +5,9 @@
     "hsp3root-unselected": "hsp3root is unselected.",
     "resolution-method-call-error": "Resolution Method Call Error [{name}] \"{message}\"",
     "resolution-error-name-reason-message": "Resolution Error [{name}] \"{message}\"",
-    "globs-config-is-not-valid": "The value of toolset-hsp3.globs is not valid."
+    "globs-config-is-not-valid": "The value of toolset-hsp3.globs is not valid.",
+    "auto-choice": "Since hsp3root was not selected, the HSP3_ROOT environment variable was automatically applied.",
+    "registry-provider": "Agent provider has been registered. ({name})"
   },
   "override": {
     "not-support-static-config-version-of-extension": "The static configuration version specified in the extension \"{extension_id}\" is not supported by this extension version. Please check the support status of each extension.",
@@ -17,6 +19,7 @@
   "unread-log": "Log updated.",
   "show": "Show",
   "reload": "Reload",
+  "reselection": "Reselection",
   "reloadWindow": "Will need to reload the window for the configuration changes to take effect.",
   "command_failed": "Execution of the \"{command_name}\" command failed."
 }

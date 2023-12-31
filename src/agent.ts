@@ -1,21 +1,21 @@
+import { platform } from "node:os";
+import { promisify } from "node:util";
 import {
   Disposable,
   ExtensionContext,
+  LanguageStatusItem,
+  LanguageStatusSeverity,
+  commands,
   languages,
   window,
-  LanguageStatusItem,
-  commands,
   workspace,
-  LanguageStatusSeverity,
 } from "vscode";
-import { promisify } from "node:util";
-import { platform } from "node:os";
 import { EXTENSION_NAME } from "./constant";
+import { i18n } from "./i18n";
+import { LogWriter } from "./log";
 import glob = require("glob");
 const pglob = promisify(glob);
 import path = require("node:path");
-import { i18n } from "./i18n";
-import { LogWriter } from "./log";
 
 export class NotInListError extends Error {
   constructor(message: string) {
@@ -51,7 +51,7 @@ const get_hsp3roots = () => {
   if (platform() === "win32") return process.env.HSP3_ROOT.split(";");
   else return process.env.HSP3_ROOT.split(":");
 };
-const hsp3roots: string[] = get_hsp3roots();
+const hsp3roots: string[] = get_hsp3roots().map((elm) => path.normalize(elm));
 
 // Win環境のパス表記をnode-globの仕様に変換する。
 const escapeWinGlob = (word: string) =>
@@ -121,6 +121,7 @@ export class Agent implements Disposable {
 
   // ツールセットプロバイダーの登録
   private registryToolsetProvider(provider: AgentProvider): Disposable {
+    this.log.info(i18n.t("agent.registry-provider", { name: provider.name }));
     const symbol = Symbol();
     this.providers.set(symbol, provider);
     return {
@@ -222,12 +223,71 @@ export class Agent implements Disposable {
 
   // workspaceStateから前回の状態に復元する。
   async load() {
+    // 現在の検索結果を得る
     if (!this.cache) await this.listing();
-    this.current = this.context.workspaceState.get<AgentItem>(
+
+    // 現在のワークスペースから最後に選択したhsp3rootを思い出す。
+    let current = this.context.workspaceState.get<AgentItem>(
       "toolset-hsp3.current"
     );
+
+    // 思い出したhsp3rootが、現在の検索結果にあるか。
+    if (current && !this.inCache(current)) current = undefined; // 無ければ無効化
+
+    // `VSCODE_HSP3ROOT_PRIORITY`環境変数があれば、HSP3_ROOT環境変数の自動適用を優先する。
+    const priority = process.env["VSCODE_HSP3ROOT_PRIORITY"];
+    if (priority?.toLowerCase() === "true" || priority === "1")
+      current = undefined;
+
+    if (!this.cache) {
+      current = undefined; // 検索結果が無ければ、hsp3rootは未選択にする。
+    } else if (
+      !current &&
+      this.cfg.get<boolean>("agent.autoChoice.enable", true)
+    ) {
+      // 思い出しても未選択ならば、HSP3_ROOT環境変数から探す。
+      for (const hsp3root of hsp3roots) {
+        for (const elm of this.cache) {
+          if (hsp3root === path.dirname(elm.path)) {
+            current = elm;
+            break;
+          }
+        }
+        if (current) break;
+      }
+
+      // HSP3_ROOT環境変数から合致するパスが見つかったら。
+      if (current) {
+        // ワークスペース設定に保存する。
+        this.save(current);
+
+        // 自動選択したことを通知する。
+        this.log.info(i18n.t("agent.auto-choice"), [
+          `name : ${current.name}`,
+          `path : ${current.path}`,
+        ]);
+        if (this.cfg.get<boolean>("agent.autoChoice.showPopInfo")) {
+          const buttonLabel_reselection = i18n.t("reselection");
+          window
+            .showInformationMessage(
+              i18n.t("agent.auto-choice"),
+              buttonLabel_reselection
+            )
+            .then((val) => {
+              if (val === buttonLabel_reselection)
+                commands
+                  .executeCommand("toolset-hsp3.select")
+                  .then(undefined, (reason) =>
+                    this.log.error("Command failed.", [reason])
+                  );
+            });
+        }
+      }
+    }
+
+    this.current = current;
     this.update();
-    return this.current
+    return this.current;
   }
 
   // workspaceStateに現在の状態を保存する。
@@ -291,7 +351,7 @@ export class Agent implements Disposable {
       return this.listen((status) => {
         if (status === AgentState.updateCurrent) callback(this.current);
       });
-    }
+    },
   };
 }
 
@@ -304,7 +364,8 @@ class LangStatBar implements Disposable {
         language: "hsp3",
       }
     );
-    this.statItem.text = "none";
+    this.statItem.text = "Initializing";
+    this.busy = true;
     this.statItem.detail = "Current hsp3root";
     this.statItem.command = {
       command: "toolset-hsp3.select",
@@ -317,7 +378,7 @@ class LangStatBar implements Disposable {
   }
 
   set busy(val: boolean) {
-    this.statItem.busy = val;
+    if (this.statItem.busy !== val) this.statItem.busy = val;
   }
 
   update(item: AgentItem | undefined) {
