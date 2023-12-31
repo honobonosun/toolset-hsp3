@@ -5,6 +5,8 @@
   "pkg_title_cmd_override": "hsp3root to override settings of other extensions",
   "pkg_desc": "VS Code extension to automatically set hsp3root",
   "pkg_desc_cfg_globs": "Fill in the [node-glob](https://www_npmjs_com/package/glob) pattern indicating the directory where the HSP3 development environment is installed.",
+  "pkg_desc_cfg_agent_autoChoice_enable": "If hsp3root is not selected at startup, the HSP3_ROOT environment variable is applied.",
+  "pkg_desc_cfg_agent_autoChoice_popInfo": "If hsp3root is not selected at startup, the system automatically notifies the user that the HSP3_ROOT environment variable has been applied.",
   "pkg_desc_cfg_override_enable": "Enable the ability to overwrite extended settings with the current hsp3root.",
   "pkg_desc_cfg_override_applyChangesImmediately": "Immediately after switching hsp3root, the settings of other extensions are overwritten.",
   "pkg_desc_cfg_override_applyChangesImmediatelyInReloadWindow": "Once you have overridden the settings, reload the window.(run command 'workbench_action_reloadWindow')",
