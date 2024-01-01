@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "0.10.0",
+  "version": "1.0.0",
   "preview": true,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
@@ -103,15 +103,6 @@
           },
           "default": [],
           "scope": "machine",
-          "examples": [
-            [
-              "vain0x.hsp3-debug-window-adapter.hsp3-root"
-            ],
-            [
-              "vain0x.hsp3-debug-window-adapter.hsp3-root",
-              "vain0x.hsp3-analyzer-mini.hsp3-root"
-            ]
-          ],
           "markdownDescription": "%pkg_desc_cfg_override_list%"
         },
         "toolset-hsp3.override.listEx": {
@@ -119,6 +110,7 @@
           "items": {
             "type": "object"
           },
+          "default": [],
           "examples": [
             [
               {
