@@ -1,5 +1,12 @@
 # toolset-hsp3 changelog
 
+## 2024/01/01 ver 1.0.0
+- *feat* hsp3rootをworkspaceStateに保存するように変更しました。
+- *feat* hsp3rootが未選択の場合、HSP3_ROOT環境変数を自動で使用するようになりました。
+- *feat* i18nextを使用して、日本語表示できるようになりました。
+- *feat* zodを使用して、安全にJSONを読み込めるようになりました。
+- *update* 公開APIを整理しました。
+
 ## 2022/01/22 ver 0.6.2
 - *fix* Windowsで動作しない不具合を修正しました。
 
