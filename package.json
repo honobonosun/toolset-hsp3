@@ -2,7 +2,7 @@
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
   "version": "1.0.0",
-  "preview": true,
+  "preview": false,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
   "readme": "./readme.md",
@@ -14,9 +14,12 @@
     "workspaceContains:**/*.hsp",
     "workspaceContains:**/*.as"
   ],
-  "repository": "git@github.com:honobonosun/toolset-hsp3.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/honobonosun/toolset-hsp3"
+  },
   "author": "Honobono",
-  "license": "MIT",
+  "license": "./LICENSE",
   "private": true,
   "engines": {
     "vscode": "^1.70.3"
