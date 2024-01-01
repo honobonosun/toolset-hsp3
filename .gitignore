@@ -106,3 +106,5 @@ dist
 # User settings
 out
 *.vsix
+.vs/
+bundle.l10n.json

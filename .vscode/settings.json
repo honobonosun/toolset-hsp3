@@ -1,5 +1,14 @@
 {
-  "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "modificationsIfAvailable",
-  "editor.formatOnType": true
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "i18n-ally.localesPaths": ["locales", "out/locales", "./"],
+  "i18n-ally.extract.ignoredByFiles": {
+    "src\\agent.ts": [";"],
+    "src\\extension.ts": ["explorer.exe .", "xdg-open .", "open hsp3root"],
+    "src\\i18n.ts": ["{", "}"],
+    "src\\override.ts": ["Global", "Workspace"]
+  },
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sourceLanguage": "ja"
 }

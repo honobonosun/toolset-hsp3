@@ -1,297 +1,152 @@
 import {
-  commands,
   Disposable,
   ExtensionContext,
-  languages,
-  LanguageStatusSeverity,
-  ShellExecution,
-  Task,
-  tasks,
-  TaskScope,
+  ExtensionMode,
+  commands,
+  env,
   window,
   workspace,
 } from "vscode";
-import { promisify } from "node:util";
-import { glob } from "glob";
-import Registry from "./registry";
-import { execFile } from "node:child_process";
-import { join, dirname, normalize } from "node:path";
-import { stat } from "node:fs/promises";
+import { Agent } from "./agent";
+import { Override } from "./override";
+import { provider } from "./provider";
 import { platform } from "node:os";
+import { i18n, init } from "./i18n";
+import { LogLevel, LogWriter } from "./log";
+import { TaskEnv } from "./env";
+import { Launcher } from "./launch";
+import { exec } from "node:child_process";
+import { EXTENSION_NAME } from "./constant";
 
-const pglob = promisify(glob);
-
-type Item = { name: string; path: string };
-
-interface Provider {
-  dispose(): void;
-  resolve(patterns: string[]): Promise<{ errors: any[]; items: Item[] }>;
-}
-
-const env_hsp3root = () => {
-  if (process.env.HSP3_ROOT)
-    return process.env.HSP3_ROOT.split(";").map((el) =>
-      el.replace(/[cC]:\\/, "/").replace(/\\/g, "/")
-    );
-  else return [];
-};
-const hsp3roots = env_hsp3root();
-
-const hsp3clVersion = (
-  path: string
-): Promise<{ path: string; version: string } | { error: any }> =>
-  new Promise(async (resolve, reject) => {
-    let cmd = path;
-    if ((await stat(path)).isDirectory()) {
-      cmd = join(path, "hsp3cl");
-      try {
-        await stat(cmd);
-      } catch (e) {
-        cmd += ".exe";
-      }
-    }
-    execFile(cmd, (error, stdout) => {
-      const r = stdout.match(/ver(.*?) /);
-      if (r && r[1]) resolve({ path: cmd, version: r[1] });
-      else resolve({ error });
-    });
+export async function activate(context: ExtensionContext) {
+  // 表示言語の初期化
+  await init(env.language, {
+    debug: context.extensionMode === ExtensionMode.Development,
   });
+  //await i18n.changeLanguage(env.language);
+  LogWriter.init();
+  LogWriter.dubbing = context.extensionMode === ExtensionMode.Development;
+  if (context.extensionMode === ExtensionMode.Development)
+    LogWriter.outcha.appendLine(i18n.t("activation"));
 
-const provider = {
-  dispose() {},
-  async resolve(paths: string[]) {
-    let errors = [] as any[];
-    let items = [] as Item[];
-
-    for (const el of paths) {
-      const result = await hsp3clVersion(el);
-      if ("error" in result) errors.push(result.error);
-      else items.push({ path: result.path, name: result.version });
-    }
-    return { errors, items };
-  },
-};
-
-export function activate(context: ExtensionContext) {
-  //console.log("activate toolset-hsp3");
-
-  const extension = new Extension(context);
-  context.subscriptions.push(extension);
-  context.subscriptions.push(
-    commands.registerCommand(
-      "toolset-hsp3.select",
-      extension.showSelect,
-      extension
-    )
-  );
-  context.subscriptions.push(
-    commands.registerCommand("toolset-hsp3.current", async (mode) => {
-      if (Array.isArray(mode) && mode[0] === "${command:toolset-hsp3.current}")
-        return await extension.methods.hsp3dir();
-      return mode === undefined
-        ? await extension.methods.hsp3dir()
-        : extension.methods.current();
-    })
-  );
-  context.subscriptions.push(
-    commands.registerCommand("toolset-hsp3.current.toString", () =>
-      extension.methods.hsp3dir()
-    )
-  );
+  const updateLogConfig = () => {
+    const cfg = workspace.getConfiguration(EXTENSION_NAME);
+    LogWriter.autoPop = cfg.get<boolean>("log.autoPop") ?? true;
+    LogWriter.infoLimit = cfg.get<LogLevel>("log.infoLimit") ?? "error";
+  };
+  updateLogConfig();
   context.subscriptions.push(
     workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("toolset-hsp3.globs")) extension.countup();
-    })
-  );
-  extension.methods.registryToolsetProvider("hsp3cl", provider);
-  const cfg = workspace.getConfiguration("toolset-hsp3");
-  const cur = cfg.get("current", undefined) as Item | undefined;
-  if (cur?.name) extension.select(cur);
-  else extension.select(undefined);
-
-  context.subscriptions.push(
-    commands.registerCommand("toolset-hsp3.open", async () => {
-      const hsp3dir = await extension.methods.hsp3dir();
-      if (!hsp3dir) return;
-      const command = ((path) => {
-        switch (platform()) {
-          case "win32":
-            return "explorer.exe .";
-          case "darwin":
-            return `open ${path}`;
-          default:
-            return process.env.WSL_DISTRO_NAME !== undefined
-              ? "explorer.exe ."
-              : "xdg-open .";
-        }
-      })(hsp3dir);
-      tasks.executeTask(
-        new Task(
-          { type: "shell", command, cwd: hsp3dir },
-          TaskScope.Workspace,
-          "open hsp3root",
-          "toolset-hsp3.taskrunner",
-          new ShellExecution(command, { cwd: hsp3dir })
-        )
-      );
+      if (e.affectsConfiguration(EXTENSION_NAME)) updateLogConfig();
     })
   );
 
-  return extension.methods;
+  // 拡張機能の初期化
+  const extension = new Extension(context);
+  context.subscriptions.push(extension);
+  extension.agent.method.registryToolsetProvider(provider);
+  await extension.agent.load();
+  extension.taskenv.update();
+  return extension.method();
 }
-
 export function deactivate() {
-  //console.log("deactivate toolset-hsp3");
+  LogWriter.dispose();
 }
 
 class Extension implements Disposable {
-  private langstatbar;
-  private registry;
-  private count = { cur: Symbol(), cnt: Symbol() };
-  private items = undefined as Item[] | undefined;
-  private current = undefined as Item | undefined;
-  private output = window.createOutputChannel("toolset-hsp3", "hsp3");
-
+  agent: Agent;
+  override: Override;
+  taskenv: TaskEnv;
+  launcher: Launcher;
+  log: LogWriter;
   constructor(private context: ExtensionContext) {
-    this.langstatbar = languages.createLanguageStatusItem(
-      "toolset-hsp3.current",
-      { language: "hsp3" }
+    this.log = new LogWriter("Extension");
+    this.agent = new Agent(context);
+    this.override = new Override(context, this.agent.method);
+    this.taskenv = new TaskEnv(context, this.agent.method);
+    this.launcher = new Launcher(context, this.agent.method);
+
+    context.subscriptions.push(
+      commands.registerCommand("toolset-hsp3.open", () => {
+        const hsp3dir = this.agent.method.hsp3root();
+        if (hsp3dir) this.open(hsp3dir);
+        else window.showErrorMessage(i18n.t("hsp3root-no-selected"));
+      })
     );
-    this.langstatbar.text = "none";
-    this.langstatbar.detail = "current hsp3root";
-    this.langstatbar.command = {
-      command: "toolset-hsp3.select",
-      title: "Select",
-    };
-
-    this.registry = {
-      toolsetProvider: new Registry<Provider>(),
-      listener: new Map<Symbol, (cur: Item | undefined) => void>(),
-    };
   }
 
-  dispose() {
-    this.langstatbar.dispose();
-    this.output.dispose();
+  public dispose(): void {
+    return;
   }
 
-  methods = {
-    showSelect: this.showSelect,
-    registryToolsetProvider: (name: string, provider: Provider) => {
-      this.countup();
-      this.registry.toolsetProvider.register(name, provider);
-      return {
-        dispose: () => this.registry.toolsetProvider.delete(name),
-      };
-    },
-    current: () => this.current,
-    hsp3dir: async () => {
-      if (!this.current?.path) return undefined;
-      const path = this.current.path;
-      if ((await stat(path)).isDirectory()) return path;
-      else return dirname(path);
-    },
-    onDidChangeCurrent: (callback: (cur: Item | undefined) => void) => {
-      const symbol = Symbol();
-      this.registry.listener.set(symbol, (cur) => callback(cur));
-      return {
-        dispose: () => {
-          this.registry.listener.delete(symbol);
+  public method = () => ({
+    agent: this.agent.method,
+    override: { override: () => this.override.override() },
+
+    // v0.x系の公開API、廃止予定のため非推奨。
+    current: this.agent.method.current,
+    hsp3dir: this.agent.method.hsp3root,
+    showSelect: () => this.agent.showSelect(),
+
+    registryToolsetProvider: (
+      name: string,
+      provider: {
+        resolve(
+          patterns: string[]
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ): Promise<{ errors: any[]; items: { name: string; path: string }[] }>;
+      }
+    ): { dispose: () => void } => {
+      return this.agent.method.registryToolsetProvider({
+        name,
+        async resolve(patterns) {
+          const { errors, items } = await provider.resolve(patterns);
+          return {
+            errors,
+            items,
+          };
         },
-      };
-    },
-  };
-
-  countup() {
-    this.count.cnt = Symbol();
-  }
-
-  async listing() {
-    if (this.count.cur === this.count.cnt) return this.items;
-
-    this.langstatbar.busy = true;
-    let items = [] as Item[];
-    try {
-      let paths = [] as string[];
-      let errors = [] as any[];
-
-      const config = workspace.getConfiguration("toolset-hsp3");
-      const globs = (config.get("globs", []) as string[]).concat(hsp3roots);
-
-      (await Promise.allSettled(globs.map((el) => pglob(el)))).forEach((v) => {
-        if (v.status === "fulfilled") paths = paths.concat(v.value);
-        else errors.push(v.reason);
       });
-      paths = paths.map((el) => normalize(el));
+    },
+  });
 
-      for (const key of this.registry.toolsetProvider.keys()) {
-        const el = this.registry.toolsetProvider.value(key);
-        if (!el) continue;
-        const result = await el.resolve(paths);
-        errors = errors.concat(result.errors);
-        items = items.concat(result.items);
+  // distに指定されたディレクトリパスをファイルマネージャーで開く
+  public async open(dist: string): Promise<void> {
+    const command = ((path) => {
+      switch (platform()) {
+        case "win32":
+          return "explorer.exe .";
+        case "darwin":
+          return `open ${path}`;
+        default:
+          return process.env.WSL_DISTRO_NAME !== undefined
+            ? "explorer.exe ."
+            : "xdg-open .";
       }
-      if (errors.length > 0) {
-        this.output.appendLine("# Toolset Provider Log");
-        errors.forEach((el) => this.output.appendLine(el.toString()));
-      }
-      this.count.cur = this.count.cnt;
-      this.items = items;
-    } catch (error) {
-      const err = error as Error;
-      this.output.appendLine("# Toolset Provider Panic Log");
-      this.output.appendLine(err.message);
-      if (err.stack) this.output.appendLine(err.stack);
-      this.output.show(true);
-    } finally {
-      this.langstatbar.busy = false;
-    }
+    })(dist);
 
-    return items;
-  }
+    const child = exec(command, { cwd: dist });
+    this.log.info(`launch command "${command}" PID[${child.pid ?? 0}]`);
+    child.on("exit", (code) => {
+      this.log.info(
+        `launched command "${command}" PID[${child.pid ?? 0}] exit (${code}).`
+      );
+    });
 
-  async update() {
-    if (this.current) {
-      this.langstatbar.text = this.current.name;
-      if (this.langstatbar.command)
-        this.langstatbar.command.tooltip = this.current.path;
-      this.langstatbar.severity = LanguageStatusSeverity.Information;
-    } else {
-      this.langstatbar.text = "none";
-      if (this.langstatbar.command)
-        this.langstatbar.command.tooltip = undefined;
-      this.langstatbar.severity = LanguageStatusSeverity.Warning;
-    }
-  }
+    /*
+    this.launcher.launch(command, [], dist);
+    */
 
-  async select(item: Item | undefined) {
-    this.current = item;
-    const cfg = workspace.getConfiguration("toolset-hsp3");
-    cfg.update("current", item, true);
-    this.registry.listener.forEach((el) => el(this.current));
-    this.update();
-  }
-
-  async showSelect() {
-    const fn = async () => {
-      const description = (path: string) => {
-        for (const el of hsp3roots.map((el) =>
-          normalize(el).replace(/^\//, "C:\\")
-        ))
-          if (el === dirname(path)) return "$env:HSP3_ROOT";
-        return undefined;
-      };
-
-      const items = await this.listing();
-      if (!items) return [];
-      return items.map((el) => ({
-        label: el.name,
-        detail: el.path,
-        item: el,
-        description: description(el.path),
-      }));
-    };
-    const sel = await window.showQuickPick(fn());
-    if (sel) this.select(sel.item);
+    /*
+    tasks.executeTask(
+      new Task(
+        { type: "shell", command, cwd: dist },
+        TaskScope.Workspace,
+        "open hsp3root",
+        "toolset-hsp3.taskrunner",
+        new ShellExecution(command, { cwd: dist })
+      )
+    );
+    */
   }
 }

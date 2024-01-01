@@ -1,0 +1,26 @@
+{
+  "activation": "アクティベーション（開発者モード）",
+  "hsp3root-no-selected": "hsp3rootが未選択です。",
+  "agent": {
+    "hsp3root-unselected": "hsp3rootを未選択にしました。",
+    "resolution-method-call-error": "解決メソッド呼び出しエラー [{name}] \"{message}\"",
+    "resolution-error-name-reason-message": "解決エラー [{name}] \"{message}\"",
+    "globs-config-is-not-valid": "toolset-hsp3.globsに有効な設定がありません。",
+    "auto-choice": "hsp3rootは未選択のため、HSP3_ROOT環境変数を自動適用しました。",
+    "registry-provider": "エージェントプロバイダーが登録されました。({name})"
+  },
+  "override": {
+    "not-support-static-config-version-of-extension": "拡張機能\"{extension_id}\"に指定された静的構成バージョンは本拡張機能のバージョンでは対応できません。各拡張機能の対応状況をご確認ください。",
+    "not-a-valid-setting-id": "拡張機能\"{extension_id}\"の静的設定[{setting_id}]は、有効な設定 IDではありません。",
+    "there-is-no-setting": "設定\"{report}\"がありません。この上書きは無視されました。",
+    "issue-with-listEx": "\"toolset-hsp3.override.listEx.{path}\"に問題があります。[{message}]",
+    "failed-to-override-the-settings-of-other-extensions": "設定の上書きに失敗しました。({path}) [{message}]",
+    "unknown-failed-to-override": "設定の上書きに失敗しました。"
+  },
+  "unread-log": "ログが更新されました。",
+  "show": "表示",
+  "reload": "再読み込み",
+  "reselection": "再選択",
+  "reloadWindow": "設定変更を反映させるために、ウィンドウの再読み込みが必要です。",
+  "command_failed": "\"{command_name}\" コマンドの実行は失敗しました。"
+}
