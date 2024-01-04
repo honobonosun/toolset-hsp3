@@ -1,5 +1,8 @@
 # toolset-hsp3 changelog
 
+## 2024/01/04 ver 1.0.2
+- *fix* changelog.mdの誤記修正しました。
+
 ## 2024/01/04 ver 1.0.1
 - *fix* 環境変数の展開機能が未実装だったのを修正しました。
 
