@@ -1,5 +1,8 @@
 # toolset-hsp3 changelog
 
+## 2024/01/04 ver 1.0.1
+- *fix* 環境変数の展開機能が未実装だったのを修正しました。
+
 ## 2024/01/01 ver 1.0.0
 - *feat* hsp3rootをworkspaceStateに保存するように変更しました。
 - *feat* hsp3rootが未選択の場合、HSP3_ROOT環境変数を自動で使用するようになりました。

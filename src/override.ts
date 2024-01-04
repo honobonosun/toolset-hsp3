@@ -102,11 +102,17 @@ const splitRegexp = {
 
 const replaceRegexp = /%(.*?)%/g;
 
+const scbase = new Map<string, string>();
+for (const key of Object.keys(process.env)) {
+  const val = process.env[key];
+  if (val) scbase.set(key, val);
+}
+
 export class Override implements Disposable {
   private subscriptions: Disposable[] = [];
   private hsp3root: string | undefined;
   private cfg = workspace.getConfiguration(EXTENSION_NAME);
-  private sc = new Map<string, string>();
+  private sc = new Map<string, string>(scbase);
   private struct: SettingStruct | undefined;
   private log: LogWriter;
 
