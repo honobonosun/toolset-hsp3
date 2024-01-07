@@ -17,6 +17,7 @@ import * as micromatch from "micromatch";
 import { Agent } from "./agent";
 import { LogWriter } from "./log";
 import { i18n } from "./i18n";
+import * as docpath from "doc-path";
 
 const zScope = z.enum([
   "undefined",
@@ -107,6 +108,18 @@ for (const key of Object.keys(process.env)) {
   const val = process.env[key];
   if (val) scbase.set(key, val);
 }
+
+const zSettingObject = z.array(
+  z.object({
+    id: z.string(),
+    path: z.string(),
+    values: z.array(z.union([z.string(), z.array(z.string())])),
+    platform: z.optional(z.string()),
+    scope: zScope,
+  })
+);
+
+type SettingObject = z.infer<typeof zSettingObject>;
 
 export class Override implements Disposable {
   private subscriptions: Disposable[] = [];
@@ -243,7 +256,6 @@ export class Override implements Disposable {
         });
       }
     else {
-      // TODO : エラーを前面に表示したい
       items.error.issues.forEach((item) =>
         this.log.error(
           i18n.t("override.issue-with-listEx", {
@@ -398,11 +410,57 @@ export class Override implements Disposable {
             .then(undefined, (error: unknown) => {
               this.log.error(i18n.t("override.unknown-failed-to-override"), [
                 `(${[item.section, item.key].join(".")})`,
-                `${error}`,
+                error instanceof Error ? error.message : String(error),
               ]);
             });
       };
       promises.push(write(elm, value));
+    }
+
+    // object override
+    const objects = this.cfg.get<SettingObject>("override.objects");
+    if (objects) {
+      const result = zSettingObject.safeParse(objects);
+      if (!result.success) {
+        this.log.error("error zod parse.", [result.error.message]);
+      }
+
+      const target = workspace.getConfiguration(
+        undefined,
+        window.activeTextEditor?.document
+      );
+      const write = async (id: string, value: string, scope: TypedScope) => {
+        target
+          .update(id, value, cfgTarget(scope))
+          .then(undefined, (reason: unknown) => {
+            this.log.error(i18n.t("override.unknown-failed-to-override"), [
+              reason instanceof Error ? reason.message : String(reason),
+            ]);
+          });
+      };
+      for (const obj of objects) {
+        if (obj.platform && obj.platform !== os.platform()) continue;
+        const prop1 = target.get<ProxyHandler<object>>(obj.id);
+        const prop = JSON.parse(JSON.stringify(prop1));
+        console.log(prop);
+        if (prop && typeof prop === "object") {
+          const val = obj.values
+            .map((elm) => {
+              if (typeof elm === "string") return this.replace(elm);
+              else return path.join(...elm.map((word) => this.replace(word)));
+            })
+            .join(" ");
+          console.log(val);
+          try {
+            const value = docpath.setPath(prop, obj.path, val);
+            promises.push(write(obj.id, value, obj.scope));
+          } catch (reason) {
+            this.log.error(i18n.t("override.unknown-failed-to-override"), [
+              reason instanceof Error ? reason.message : String(reason),
+            ]);
+          }
+        }
+      }
     }
 
     await Promise.all(promises);

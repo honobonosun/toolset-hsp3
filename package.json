@@ -114,6 +114,7 @@
             "type": "object"
           },
           "default": [],
+          "scope": "machine",
           "examples": [
             [
               {
@@ -130,6 +131,14 @@
             ]
           ],
           "markdownDescription": "%pkg_desc_cfg_override_listEx%"
+        },
+        "toolset-hsp3.override.objects": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "default": [],
+          "scope": "machine"
         },
         "toolset-hsp3.override.ignores": {
           "type": "array",
@@ -225,6 +234,11 @@
         "toolset-hsp3.test.path": {
           "type": "string",
           "scope": "machine"
+        },
+        "toolset-hsp3.test.object": {
+          "type": "object",
+          "scope": "machine",
+          "default": {"default_key": "default_value"}
         }
       }
     },
@@ -293,6 +307,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "doc-path": "^4.0.2",
     "glob": "^8.0.3",
     "i18next": "^23.6.0",
     "micromatch": "^4.0.5",
