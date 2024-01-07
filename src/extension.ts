@@ -132,21 +132,5 @@ class Extension implements Disposable {
         `launched command "${command}" PID[${child.pid ?? 0}] exit (${code}).`
       );
     });
-
-    /*
-    this.launcher.launch(command, [], dist);
-    */
-
-    /*
-    tasks.executeTask(
-      new Task(
-        { type: "shell", command, cwd: dist },
-        TaskScope.Workspace,
-        "open hsp3root",
-        "toolset-hsp3.taskrunner",
-        new ShellExecution(command, { cwd: dist })
-      )
-    );
-    */
   }
 }
