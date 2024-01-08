@@ -138,7 +138,8 @@
             "type": "object"
           },
           "default": [],
-          "scope": "machine"
+          "scope": "machine",
+          "markdownDescription": "%pkg_desc_cfg_override_objects%"
         },
         "toolset-hsp3.override.ignores": {
           "type": "array",
