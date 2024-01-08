@@ -442,7 +442,6 @@ export class Override implements Disposable {
         if (obj.platform && obj.platform !== os.platform()) continue;
         const prop1 = target.get<ProxyHandler<object>>(obj.id);
         const prop = JSON.parse(JSON.stringify(prop1));
-        console.log(prop);
         if (prop && typeof prop === "object") {
           const val = obj.values
             .map((elm) => {
@@ -450,7 +449,6 @@ export class Override implements Disposable {
               else return path.join(...elm.map((word) => this.replace(word)));
             })
             .join(" ");
-          console.log(val);
           try {
             const value = docpath.setPath(prop, obj.path, val);
             promises.push(write(obj.id, value, obj.scope));
