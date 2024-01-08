@@ -1,5 +1,8 @@
 # toolset-hsp3 changelog
 
+## 2024/01/08 ver 1.1.0
+- *feat* #issue8 プロパティな設定に上書きができるようになりました。
+
 ## 2024/01/04 ver 1.0.2
 - *fix* changelog.mdの誤記修正しました。
 
