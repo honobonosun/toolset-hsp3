@@ -249,7 +249,4 @@ HSP3_ROOT 環境変数と、Path 環境変数には、現在選択されてい�
 - [micromatch](https://github.com/micromatch/micromatch/blob/master/LICENSE)
 - [semver](https://github.com/npm/node-semver/blob/main/LICENSE)
 - [zod](https://github.com/colinhacks/zod/blob/master/LICENSE)
-
-上記全ての規約に同意できない場合、本拡張機能の使用は、お控えいただきますようお願い申し上げます。
-
-リンク先が消失された場合、イシュー頂ければ幸いです。（イシュー先： https://github.com/honobonosun/toolset-hsp3/issues ）
+- [doc-path](https://github.com/mrodrig/doc-path)
