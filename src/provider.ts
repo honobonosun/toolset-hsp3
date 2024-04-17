@@ -6,22 +6,30 @@ import { AgentItem, AgentProvider } from "./agent";
 const hsp3clVersion = (
   path: string
 ): Promise<{ path: string; version: string } | { error: any }> =>
-  // eslint-disable-next-line no-async-promise-executor
-  new Promise(async (resolve, reject) => {
+  new Promise((resolve) => {
     let cmd = path;
-    if ((await stat(path)).isDirectory()) {
-      cmd = join(path, "hsp3cl");
-      try {
-        await stat(cmd);
-      } catch (e) {
-        cmd += ".exe";
-      }
-    }
-    execFile(cmd, (error, stdout) => {
-      const r = stdout.match(/ver(.*?) /);
-      if (r && r[1]) resolve({ path: cmd, version: r[1] });
-      else resolve({ error });
-    });
+    stat(path)
+      .then((val) => {
+        if (val.isDirectory()) {
+          cmd = join(path, "hsp3cl");
+          return stat(cmd).then(
+            () => cmd,
+            () => `${cmd}.exe`
+          );
+        }
+        return cmd;
+      })
+      .then(() => {
+        try {
+          execFile(cmd, (error, stdout) => {
+            const r = stdout.match(/ver(.*?) /);
+            if (r && r[1]) resolve({ path: cmd, version: r[1] });
+            resolve({ error });
+          });
+        } catch (err) {
+          resolve({ error: err });
+        }
+      });
   });
 
 export const provider: AgentProvider = {
