@@ -76,6 +76,10 @@ class Extension implements Disposable {
   }
 
   public dispose(): void {
+    this.launcher.dispose();
+    this.taskenv.dispose();
+    this.override.dispose();
+    this.agent.dispose();
     return;
   }
 
