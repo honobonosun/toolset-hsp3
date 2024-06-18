@@ -6,7 +6,7 @@ import { AgentItem, AgentProvider } from "./agent";
 const hsp3clVersion = (
   path: string
 ): Promise<{ path: string; version: string } | { error: any }> =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     let cmd = path;
     stat(path)
       .then((val) => {
@@ -19,14 +19,16 @@ const hsp3clVersion = (
         }
         return cmd;
       })
-      .then(() => {
+      .then((val) => {
         try {
-          execFile(cmd, (error, stdout) => {
+          execFile(val, (error, stdout) => {
             const r = stdout.match(/ver(.*?) /);
-            if (r && r[1]) resolve({ path: cmd, version: r[1] });
+            if (r && r[1]) resolve({ path: val, version: r[1] });
             resolve({ error });
           });
         } catch (err) {
+          if (err instanceof Error)
+            Object.assign(err, { message: `PATH : [${val}] ${err.message}` });
           resolve({ error: err });
         }
       });
