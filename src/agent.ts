@@ -5,6 +5,7 @@ import {
   ExtensionContext,
   LanguageStatusItem,
   LanguageStatusSeverity,
+  Uri,
   commands,
   languages,
   window,
@@ -144,7 +145,6 @@ export class Agent implements Disposable {
               name,
               message: reason.message,
             })
-            /*`Resolution Method Call Error [${name}] "${reason.message}"`*/
           );
         else this.log.error("Resolution Method Call Error", [name, reason]);
       });
@@ -157,7 +157,6 @@ export class Agent implements Disposable {
                 name,
                 message: reason.message,
               })
-              /*`Resolution Error [${name}] "${reason.message}"`*/
             );
           else this.log.error("Resolution Error", [name, reason]);
       }
@@ -221,6 +220,12 @@ export class Agent implements Disposable {
     return false;
   }
 
+  findCachePath(fspath: string) {
+    if (!this.cache) throw new Error("no cache data.");
+    for (const elm of this.cache) if (elm.path === fspath) return elm;
+    return undefined;
+  }
+
   // workspaceStateから前回の状態に復元する。
   async load() {
     // 現在の検索結果を得る
@@ -258,9 +263,6 @@ export class Agent implements Disposable {
 
       // HSP3_ROOT環境変数から合致するパスが見つかったら。
       if (current) {
-        // ワークスペース設定に保存する。
-        this.save(current);
-
         // 自動選択したことを通知する。
         this.log.info(i18n.t("agent.auto-choice"), [
           `name : ${current.name}`,
@@ -285,9 +287,8 @@ export class Agent implements Disposable {
       }
     }
 
-    this.current = current;
-    this.update();
-    return this.current;
+    this.select(current);
+    return;
   }
 
   // workspaceStateに現在の状態を保存する。
