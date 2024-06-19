@@ -1,4 +1,5 @@
 {
+  "HSP3_ROOT": "%HSP3_ROOT%",
   "pkg_title_cmd_select": "hsp3rootを選択する",
   "pkg_title_cmd_unset": "hsp3root選択を解除する",
   "pkg_title_cmd_open": "hsp3rootをファイルマネージャーを開く",
