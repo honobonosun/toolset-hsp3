@@ -1,7 +1,7 @@
 {
   "name": "toolset-hsp3",
   "publisher": "honobonosun",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "preview": false,
   "description": "An VS Code extension to automate hsp3root path configuration.",
   "main": "out/extension.js",
