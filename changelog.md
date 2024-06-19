@@ -1,7 +1,14 @@
 # toolset-hsp3 changelog
 
+## 2024/06/19 ver 1.1.1
+- *fix* [#12](https://github.com/honobonosun/toolset-hsp3/issues/12) 内蔵したエージェントプロバイダーhsp3clの無限待機する不具合を修正しました。
+- その他、動作の微調整を行いました。
+- *update* package-lockの依存関係更新を行いました。
+- *fix* package.jsonの翻訳キーとして%HSP3_ROOT%を検出してしまう。
+  - キーがないとパッケージ化できないので、同じ文字をpackage.nls.jsonに登録して回避しました。
+
 ## 2024/01/08 ver 1.1.0
-- *feat* #issue8 プロパティな設定に上書きができるようになりました。
+- *feat* [#8](https://github.com/honobonosun/toolset-hsp3/issues/8) プロパティな設定に上書きができるようになりました。
 
 ## 2024/01/04 ver 1.0.2
 - *fix* changelog.mdの誤記修正しました。

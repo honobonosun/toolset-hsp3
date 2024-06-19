@@ -1,4 +1,5 @@
 {
+  "HSP3_ROOT": "%HSP3_ROOT%",
   "pkg_title_cmd_select": "Select hsp3root",
   "pkg_title_cmd_unset": "Deselect hsp3root",
   "pkg_title_cmd_open": "Open file manager hsp3root",
